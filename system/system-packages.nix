@@ -3,5 +3,6 @@
     home-manager
     gparted
     wineWowPackages.stable
+    jq
   ];
 }
