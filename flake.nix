@@ -22,6 +22,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+    impermanence.url = "github:nix-community/impermanence";
   };
 
   outputs = flakes: (import ./utils/mkOutputs.nix) flakes {
@@ -41,13 +42,14 @@
       ./system/hardware-configuration.nix
       ./system/system-packages.nix
       ./system/display-manager.nix
+      ./system/impermanence.nix
       ./system/localization.nix
       ./system/secure_boot.nix
       ./system/ms-surface.nix
       ./system/networking.nix
       ./system/bluetooth.nix
       ./system/printing.nix
-      ./system/nvidia.nix
+      # ./system/nvidia.nix
       ./system/sound.nix
       ./system/users.nix
     ];
