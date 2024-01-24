@@ -19,6 +19,11 @@
         "Desktop"
         ".local/share/kwalletd"
         ".local/share/kscreen"
+        ".local/share/PrismLauncher"
+      ];
+      files = [
+        # ".config/plasmashellrc"
+        # ".config/plasma-org.kde.plasma.desktop-appletsrc"
       ];
     };
   };
