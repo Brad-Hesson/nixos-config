@@ -17,6 +17,8 @@
       directories = [
         "Code"
         "Desktop"
+        ".local/share/kwalletd"
+        ".local/share/kscreen"
       ];
     };
   };
