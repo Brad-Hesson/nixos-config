@@ -13,5 +13,11 @@
       "/etc/NetworkManager/system-connections"
       "/etc/secureboot"
     ];
+    users.bhesson = {
+      directories = [
+        "Code"
+        "Desktop"
+      ];
+    };
   };
 }
