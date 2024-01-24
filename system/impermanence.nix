@@ -10,8 +10,8 @@
 
   environment.persistence."/persist" = {
     directories = [
-      /etc/NetworkManager/system-connections
-      /etc/secureboot
+      "/etc/NetworkManager/system-connections"
+      "/etc/secureboot"
     ];
   };
 }
