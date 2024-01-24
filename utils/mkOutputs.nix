@@ -18,6 +18,7 @@ in
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
         home-manager.extraSpecialArgs = { inherit flakes sysargs; };
+        inherit pkgs;
         home-manager.users.${username} = {
           imports = userModules;
           home.username = username;
