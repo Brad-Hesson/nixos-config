@@ -9,10 +9,23 @@ in
   nixosConfigurations.${hostname} = flakes.nixpkgs.lib.nixosSystem {
     specialArgs = { inherit flakes sysargs; };
     inherit pkgs;
-    modules = systemModules ++ [{
-      nix.settings.experimental-features = [ "nix-command" "flakes" ];
-      system.stateVersion = "23.11";
-    }];
+    modules = systemModules ++ [
+      {
+        nix.settings.experimental-features = [ "nix-command" "flakes" ];
+        system.stateVersion = "23.11";
+      }
+      (flakes.home-manager.nixosModules.home-manager {
+        home-manager.useGlobalPkgs = true;
+        home-manager.useUserPackages = true;
+        home-manager.extraSpecialArgs = { inherit flakes sysargs; };
+        home-manager.users.${username} = {
+          imports = userModules;
+          home.username = username;
+          home.homeDirectory = "/home/${username}";
+          home.stateVersion = "23.05";
+        };
+      })
+    ];
   };
   homeConfigurations.${username} = flakes.home-manager.lib.homeManagerConfiguration {
     extraSpecialArgs = { inherit flakes sysargs; };
