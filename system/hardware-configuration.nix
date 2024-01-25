@@ -23,11 +23,6 @@
       fsType = "zfs";
     };
 
-  # fileSystems."/home" =
-  #   { device = "tank/safe/home";
-  #     fsType = "zfs";
-  #   };
-
   fileSystems."/persist" =
     { device = "tank/safe/persist";
       fsType = "zfs";
