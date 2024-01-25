@@ -49,7 +49,7 @@
       ./system/networking.nix
       ./system/bluetooth.nix
       ./system/printing.nix
-      # ./system/nvidia.nix
+      ./system/nvidia.nix
       ./system/sound.nix
       ./system/users.nix
     ];
