@@ -20,6 +20,7 @@
         ".local/share/kwalletd"
         ".local/share/kscreen"
         ".local/share/PrismLauncher"
+        ".local/share/Steam"
         ".mozilla"
         ".vscode"
         ".config/Code/User"
