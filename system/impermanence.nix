@@ -20,6 +20,9 @@
         ".local/share/kwalletd"
         ".local/share/kscreen"
         ".local/share/PrismLauncher"
+        ".mozilla"
+        ".vscode"
+        ".config/Code/User"
       ];
       files = [
         # ".config/plasmashellrc"
