@@ -15,4 +15,11 @@
     layout = "us";
     xkbVariant = "";
   };
+
+  environment.persistence."/persist".users.bhesson.directories = [
+    ".local/share/kwalletd"
+    ".local/share/kscreen"
+  ];
+
+
 }

@@ -16,4 +16,8 @@
   home.sessionVariables = {
     MOZ_USE_XINPUT2 = "1";
   };
+
+  home.persistence."/persist/home/bhesson".directories = [
+    ".mozilla"
+  ];
 }
