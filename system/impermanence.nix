@@ -13,7 +13,7 @@
       "/etc/NetworkManager/system-connections"
       "/etc/secureboot"
       "/var/lib/bluetooth"
-      
+
     ];
     users.bhesson = {
       directories = [
@@ -28,8 +28,7 @@
         ".mozilla"
       ];
       files = [
-        # ".config/plasmashellrc"
-        # ".config/plasma-org.kde.plasma.desktop-appletsrc"
+        ".local/share/user-places.xbel"
       ];
     };
   };
