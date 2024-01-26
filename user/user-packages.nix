@@ -3,7 +3,6 @@
     steam
     prusa-slicer
     thunderbird
-    discord
     vlc
     qdirstat
     prismlauncher

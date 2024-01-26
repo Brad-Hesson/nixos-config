@@ -32,6 +32,7 @@
     userModules = [
       ./user/user-packages.nix
       ./user/firefox.nix
+      ./user.discord.nix
       ./user/vscode.nix
       ./user/bash.nix
       ./user/rust.nix
