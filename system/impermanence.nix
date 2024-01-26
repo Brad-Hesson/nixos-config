@@ -12,6 +12,8 @@
     directories = [
       "/etc/NetworkManager/system-connections"
       "/etc/secureboot"
+      "/var/lib/bluetooth"
+      
     ];
     users.bhesson = {
       directories = [
@@ -24,8 +26,6 @@
         ".local/share/baloo"
         ".local/share/dolphin"
         ".mozilla"
-        ".vscode"
-        ".config/Code/User"
       ];
       files = [
         # ".config/plasmashellrc"
