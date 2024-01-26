@@ -16,9 +16,4 @@
     # For debugging and troubleshooting Secure Boot.
     sbctl
   ];
-
-  environment.persistence."/persist".directories = [
-    "/etc/secureboot"
-  ];
-
 }
