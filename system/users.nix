@@ -4,6 +4,5 @@
     isNormalUser = true;
     description = "Brad Hesson";
     extraGroups = [ "networkmanager" "wheel" ];
-    hashedPasswordFile = "/persist/etc/users/bhesson";
   };
 }

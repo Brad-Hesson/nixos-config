@@ -10,10 +10,4 @@
     inotify-tools
     # (import ../packages/lychee-slicer.nix pkgs)
   ];
-  home.persistence."/persist/home/bhesson" = {
-    directories = [
-      ".local/share/PrismLauncher"
-      ".local/share/Steam"
-    ];
-  };
 }

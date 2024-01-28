@@ -6,4 +6,17 @@
   '';
 
   fileSystems."/persist".neededForBoot = true;
+  users.users.bhesson.hashedPasswordFile = "/persist/etc/users/bhesson";
+
+  environment.persistence."/persist" = {
+    users.bhesson = {
+      directories = [
+        "Code"
+        "Desktop"
+        ".local/share/PrismLauncher"
+        ".local/share/Steam"
+        ".mozilla"
+      ];
+    };
+  };
 }
