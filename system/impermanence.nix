@@ -9,26 +9,13 @@
   users.users.bhesson.hashedPasswordFile = "/persist/etc/users/bhesson";
 
   environment.persistence."/persist" = {
-    directories = [
-      "/etc/NetworkManager/system-connections"
-      "/etc/secureboot"
-      "/var/lib/bluetooth"
-
-    ];
     users.bhesson = {
       directories = [
         "Code"
         "Desktop"
-        ".local/share/kwalletd"
-        ".local/share/kscreen"
         ".local/share/PrismLauncher"
         ".local/share/Steam"
-        ".local/share/baloo"
-        ".local/share/dolphin"
         ".mozilla"
-      ];
-      files = [
-        ".local/share/user-places.xbel"
       ];
     };
   };
