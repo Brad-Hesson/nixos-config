@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, flakes, ... }: {
+  imports = [ flakes.impermanence.nixosModules.home-manager.impermanence ];
   programs.vscode.enable = true;
   home.packages = with pkgs; [ nil nixpkgs-fmt ];
 

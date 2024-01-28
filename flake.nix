@@ -31,7 +31,6 @@
     system = "x86_64-linux";
     userModules = [
       ./user/user-packages.nix
-      ./user/impermanence.nix
       ./user/firefox.nix
       ./user/discord.nix
       ./user/vscode.nix
