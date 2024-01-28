@@ -15,17 +15,4 @@
     layout = "us";
     xkbVariant = "";
   };
-
-  environment.persistence."/persist" = {
-    users.bhesson = {
-      directories = [
-        ".local/share/kscreen"
-        ".local/share/baloo"
-        ".local/share/dolphin"
-      ];
-      files = [
-        ".local/share/user-places.xbel"
-      ];
-    };
-  };
 }
