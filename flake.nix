@@ -31,6 +31,7 @@
     system = "x86_64-linux";
     userModules = [
       ./user/user-packages.nix
+      ./user/thunderbird.nix
       ./user/firefox.nix
       ./user/discord.nix
       ./user/vscode.nix

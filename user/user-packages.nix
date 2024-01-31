@@ -2,7 +2,6 @@
   home.packages = with pkgs; [
     steam
     prusa-slicer
-    thunderbird
     vlc
     qdirstat
     prismlauncher
