@@ -1,3 +1,3 @@
 {
-  home.persistence."/persist/home/bhesson".useOther = true;
+  home.persistence."/persist/home/bhesson".allowOther = false;
 }
