@@ -13,6 +13,7 @@
       "/etc/NetworkManager/system-connections"
       "/etc/secureboot"
       "/var/lib/bluetooth"
+      "/root/.ssh"
 
     ];
     users.bhesson = {
@@ -26,6 +27,7 @@
         ".local/share/baloo"
         ".local/share/dolphin"
         ".mozilla"
+        ".ssh"
       ];
       files = [
         ".local/share/user-places.xbel"
