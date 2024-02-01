@@ -33,7 +33,6 @@
       ./user/user-packages.nix
       ./user/impermanence.nix
       ./user/thunderbird.nix
-      ./user/plasma5.nix
       ./user/firefox.nix
       ./user/discord.nix
       ./user/vscode.nix
