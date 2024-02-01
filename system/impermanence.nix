@@ -26,7 +26,6 @@
         ".local/share/Steam"
         ".local/share/baloo"
         ".local/share/dolphin"
-        ".mozilla"
         ".ssh"
       ];
       files = [
