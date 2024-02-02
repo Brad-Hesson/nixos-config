@@ -9,11 +9,10 @@
     alsa.support32Bit = true;
     pulse.enable = true;
   };
-  environment.persistence."/persist" = {
-    users.bhesson = {
-      directories = [
-        ".local/state/wireplumber"
-      ];
-    };
-  };
+
+  environment.persistence."/persist".users.bhesson.directories = [
+    ".local/state/wireplumber"
+  ];
+
+
 }
