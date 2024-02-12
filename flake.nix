@@ -32,6 +32,7 @@
       ./user/firefox.nix
       ./user/discord.nix
       ./user/vscode.nix
+      ./user/direnv.nix
       ./user/bash.nix
       ./user/rust.nix
       ./user/kde.nix
