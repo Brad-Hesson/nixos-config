@@ -13,7 +13,10 @@
   home.persistence."/persist/home/bhesson" = {
     directories = [
       ".local/share/PrismLauncher"
-      ".local/share/Steam"
+      {
+        directory = ".local/share/Steam";
+        method = "symlink";
+      }
     ];
   };
 
