@@ -1,4 +1,5 @@
-{
+let mkOutputs = import ./utils/mkOutputs.nix;
+in {
   description = "Nixos Flake";
 
   inputs = {
@@ -21,7 +22,7 @@
     impermanence.url = "github:nix-community/impermanence";
   };
 
-  outputs = flakes: (import ./utils/mkOutputs.nix) flakes {
+  outputs = flakes: mkOutputs flakes {
     username = "bhesson";
     hostname = "nixos";
     system = "x86_64-linux";
