@@ -48,6 +48,7 @@
       ./system/ms-surface.nix
       ./system/networking.nix
       ./system/bluetooth.nix
+      ./system/tailscale.nix
       ./system/printing.nix
       ./system/nvidia.nix
       ./system/sound.nix

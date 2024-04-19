@@ -4,5 +4,6 @@
     gparted
     wineWowPackages.stable
     jq
+    nh
   ];
 }
