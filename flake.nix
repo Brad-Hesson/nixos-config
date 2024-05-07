@@ -50,6 +50,7 @@
       ./system/bluetooth.nix
       ./system/tailscale.nix
       ./system/printing.nix
+      ./system/docker.nix
       ./system/nvidia.nix
       ./system/sound.nix
       ./system/users.nix
