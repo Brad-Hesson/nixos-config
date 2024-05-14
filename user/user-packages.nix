@@ -7,6 +7,7 @@
     prismlauncher
     jdk17_headless
     inotify-tools
+    nix-output-monitor
     # (import ../packages/lychee-slicer.nix pkgs)
   ];
 
