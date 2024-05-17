@@ -3,7 +3,7 @@
   users.users.${sysargs.username} = {
     isNormalUser = true;
     description = "Brad Hesson";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "dialout" ];
     hashedPasswordFile = "/persist/etc/users/bhesson";
   };
 
