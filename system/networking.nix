@@ -7,4 +7,5 @@
     "/etc/NetworkManager/system-connections"
   ];
 
+  networking.firewall.allowedTCPPorts = [ 8081 7071 ];
 }
