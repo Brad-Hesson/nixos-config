@@ -39,6 +39,7 @@
       ./apps/thunderbird.nix
       ./apps/firefox.nix
       ./apps/vscode.nix
+      ./apps/comma.nix
       ./system/hardware-configuration.nix
       ./system/system-packages.nix
       ./system/display-manager.nix
@@ -54,7 +55,6 @@
       ./system/nvidia.nix
       ./system/sound.nix
       ./system/users.nix
-      ./system/comma.nix
     ];
   };
 }
