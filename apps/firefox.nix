@@ -14,15 +14,12 @@
     # make touchscreen scrolling work
     # NOTE: only works if programs.bash.enable = true, meaning
     #       that home-manager is managing the shell
-    # home.sessionVariables = lib.warnIfNot (config.programs.bash.enable == true) "foo is not bar, silly" {
-    home.sessionVariables =
-      lib.trivial.throwIfNot
-        (config.programs.bash.enable == true)
-        "firefox.nix: home-manager setting `programs.bash.enable == true` must be
+    home.sessionVariables = lib.trivial.throwIfNot (config.programs.bash.enable == true)
+      "firefox.nix: home-manager setting `programs.bash.enable == true` must be
         set in order to configure firefox for touchscreens"
-        {
-          MOZ_USE_XINPUT2 = "1";
-        };
+      {
+        MOZ_USE_XINPUT2 = "1";
+      };
     home.persistence."/persist/home/bhesson".directories = [
       ".mozilla"
     ];
