@@ -31,14 +31,14 @@
       ./user/thunderbird.nix
       ./user/firefox.nix
       ./user/vscode.nix
-      ./user/direnv.nix
       ./user/bash.nix
-      ./user/rust.nix
       ./user/kde.nix
       ./user/git.nix
     ];
     systemModules = [
       ./apps/discord.nix
+      ./apps/rust.nix
+      ./apps/direnv.nix
       ./system/hardware-configuration.nix
       ./system/system-packages.nix
       ./system/display-manager.nix
