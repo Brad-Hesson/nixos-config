@@ -28,7 +28,6 @@
     userModules = [
       ./user/user-packages.nix
       ./user/impermanence.nix
-      ./user/firefox.nix
       ./user/vscode.nix
       ./user/bash.nix
       ./user/kde.nix
@@ -39,6 +38,7 @@
       ./apps/rust.nix
       ./apps/direnv.nix
       ./apps/thunderbird.nix
+      ./apps/firefox.nix
       ./system/hardware-configuration.nix
       ./system/system-packages.nix
       ./system/display-manager.nix
