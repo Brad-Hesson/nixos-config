@@ -30,7 +30,6 @@
       ./user/impermanence.nix
       ./user/thunderbird.nix
       ./user/firefox.nix
-      ./user/discord.nix
       ./user/vscode.nix
       ./user/direnv.nix
       ./user/bash.nix
@@ -39,6 +38,7 @@
       ./user/git.nix
     ];
     systemModules = [
+      ./apps/discord.nix
       ./system/hardware-configuration.nix
       ./system/system-packages.nix
       ./system/display-manager.nix
