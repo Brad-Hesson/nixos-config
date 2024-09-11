@@ -55,6 +55,7 @@
       ./system/nvidia.nix
       ./system/sound.nix
       ./system/users.nix
+      ./system/homarr/homarr.nix
     ];
   };
 }
