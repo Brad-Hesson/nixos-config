@@ -51,6 +51,8 @@ in
           mkdir -p ${cfg.dataDir}
           rsync -r --exclude node_modules ${src}/ ${cfg.dataDir}
           ln -s ${src}/node_modules ${cfg.dataDir}/node_modules
+          chown -R ${cfg.user}:${cfg.group} ${cfg.dataDir}
+          chmod -R +w ${cfg.dataDir}
         fi
       '';
 
@@ -72,7 +74,7 @@ in
       allowedTCPPorts = [ 3000 ];
     };
 
-    users.users = mkIf (cfg.user == " homarr ") {
+    users.users = mkIf (cfg.user == "homarr") {
       homarr = {
         group = cfg.group;
         home = cfg.dataDir;
@@ -80,12 +82,9 @@ in
       };
     };
 
-    users.groups = mkIf
-      (cfg.group == "
-            homarr ")
-      {
-        homarr.gid = 267;
-      };
+    users.groups = mkIf (cfg.group == "homarr") {
+      homarr.gid = 267;
+    };
   };
 }
 
