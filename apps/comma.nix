@@ -5,6 +5,6 @@
         ".cache/nix-index"
       ];
     };
-    home.packages = with pkgs; [ comma ];
+    home.packages = with pkgs; [ comma nix-index ];
   };
 }
