@@ -18,22 +18,4 @@
       turbo = "auto";
     };
   };
-
-  boot.initrd =
-    let
-      mods = [
-        "surface_aggregator"
-        "surface_aggregator_registry"
-        "surface_aggregator_hub"
-        "surface_hid_core"
-        "surface_hid"
-        "intel_lpss"
-        "intel_lpss_pci"
-        "8250_dw"
-      ];
-    in
-    {
-      kernelModules = mods;
-      availableKernelModules = mods;
-    };
 }
