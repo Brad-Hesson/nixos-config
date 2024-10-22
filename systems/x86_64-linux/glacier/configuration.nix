@@ -1,18 +1,14 @@
-{ config, systems, system, target, format, lib, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
-  nixpkgs.config.allowUnfree = lib.trace
-    {
-      inherit systems system target format;
-    }
-    true;
+  nixpkgs.config.allowUnfree = true;
   nixpkgs.config.nvidia.acceptLicense = true;
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "bhesson-desktop"; # Define your hostname.
+  networking.hostName = "glacier"; # Define your hostname.
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable = true; # Easiest to use and most distros use this by default
