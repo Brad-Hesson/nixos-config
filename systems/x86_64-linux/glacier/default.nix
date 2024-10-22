@@ -10,13 +10,9 @@
     persistPath = "/persist";
     snapshotPath = "zpool/root@blank";
   };
-
   persistif.directories = [
     "/var/lib/nixos" # persists uids and gids
-    "/var/log/journal" # persists the journalctl log
   ];
-  environment.etc."machine-id".text = "a820625fc1684eff85b35e5e198a3a76";
-
 
   users.users.bhesson = {
     isNormalUser = true;
