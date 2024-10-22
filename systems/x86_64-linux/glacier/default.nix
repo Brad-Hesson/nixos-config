@@ -35,6 +35,8 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Home Manager
+  home-manager.backupFileExtension = "backup";
 
   # ZFS
   networking.hostId = "3072eb80";
