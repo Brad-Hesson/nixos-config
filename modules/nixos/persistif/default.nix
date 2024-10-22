@@ -31,10 +31,11 @@ in
     # persisted values may be necessary for boot
     fileSystems.${cfg.persistPath}.neededForBoot = true;
 
-    # reset to the provided snapshot on each boot
+    # rollback to the provided snapshot on each boot
     boot.initrd.postResumeCommands = lib.mkAfter ''
-      echo "Rolling back to ZFS snapshot `${cfg.snapshotPath}`"
+      echo "Rolling back to ZFS snapshot '${cfg.snapshotPath}'"
       zfs rollback -r ${cfg.snapshotPath}
+      echo "Rollback complete"
     '';
 
     # this is needed to allow the home module to set `allowOther`, so that sudo can access the mounts
