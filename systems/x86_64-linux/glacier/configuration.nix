@@ -1,7 +1,11 @@
-{ config, lib, pkgs, ... }:
+{ config, systems, system, target, format, lib, pkgs, ... }:
 
 {
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowUnfree = lib.trace
+    {
+      inherit systems system target format;
+    }
+    true;
   nixpkgs.config.nvidia.acceptLicense = true;
 
   # Use the systemd-boot EFI boot loader.
