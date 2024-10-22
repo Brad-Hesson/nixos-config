@@ -32,7 +32,10 @@ in
     fileSystems.${cfg.persistPath}.neededForBoot = true;
 
     # reset to the provided snapshot on each boot
-    boot.initrd.postResumeCommands = lib.mkAfter ''zfs rollback -r ${cfg.snapshotPath}'';
+    boot.initrd.postResumeCommands = lib.mkAfter ''
+      echo "Rolling back to ZFS snapshot `${cfg.snapshotPath}`"
+      zfs rollback -r ${cfg.snapshotPath}
+    '';
 
     # this is needed to allow the home module to set `allowOther`, so that sudo can access the mounts
     programs.fuse.userAllowOther = true;
