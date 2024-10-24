@@ -4,8 +4,10 @@ let
 in
 {
   options = {
-    mods.display.plasma.enable = lib.mkEnableOption "plasma display";
-    mods.display.plasma.defaultx11 = lib.mkEnableOption "default to x11 rather than wayland";
+    mods.display.plasma = {
+      enable = lib.mkEnableOption "plasma display";
+      defaultx11 = lib.mkEnableOption "default to x11 rather than wayland";
+    };
   };
   config = lib.mkIf (cfg.plasma.enable) {
     services.xserver.enable = true;
