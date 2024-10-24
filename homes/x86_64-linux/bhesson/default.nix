@@ -1,6 +1,5 @@
 { inputs, lib, config, ... }: {
   imports = [ ];
-  home.stateVersion = "24.05";
   programs.bash.enable = true;
 
   persistif.directories = [ "Desktop" "Pictures" ];
@@ -10,4 +9,6 @@
     userName = "Brad Hesson";
     userEmail = "brad.hesson@outlook.com";
   };
+  
+  home.stateVersion = "24.05";
 }
