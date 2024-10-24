@@ -3,9 +3,32 @@ let
   cfg = config.mods.hardware.network;
 in
 {
-  options = {
-    mods.hardware.network.ports = { };
-  };
+  options =
+    let
+      portType = with lib.types; listOf (either port (attrsOf types.port));
+    in
+    {
+      mods.hardware.network = {
+        ports = lib.mkOption {
+          default = [ ];
+          example = [ 8080 { from = 8999; to = 9003; } ];
+          description = "ports and port ranges to forward";
+          type = portType;
+        };
+        TCPPorts = lib.mkOption {
+          default = [ ];
+          example = [ 8080 { from = 8999; to = 9003; } ];
+          description = "TCP ports and port ranges to forward";
+          type = portType;
+        };
+        UDPPorts = lib.mkOption {
+          default = [ ];
+          example = [ 8080 { from = 8999; to = 9003; } ];
+          description = "UDP ports and port ranges to forward";
+          type = portType;
+        };
+      };
+    };
   config = {
     # Easiest to use and most distros use this by default
     networking.networkmanager.enable = true;
@@ -13,11 +36,14 @@ in
     # Open ports in the firewall.
     networking.firewall =
       let
-        both = [{ from = 1714; to = 1764; }]; # KDE Connect
+        ranges = l: builtins.filter builtins.isAttrs l;
+        ports = l: builtins.filter builtins.isInt l;
       in
       {
-        allowedTCPPortRanges = both ++ [ ];
-        allowedUDPPortRanges = both ++ [ ];
+        allowedTCPPorts = ports (cfg.ports ++ cfg.TCPPorts);
+        allowedUDPPorts = ports (cfg.ports ++ cfg.UDPPorts);
+        allowedTCPPortRanges = ranges (cfg.ports ++ cfg.TCPPorts);
+        allowedUDPPortRanges = ranges (cfg.ports ++ cfg.UDPPorts);
       };
 
     # Allows incoming ssh connections

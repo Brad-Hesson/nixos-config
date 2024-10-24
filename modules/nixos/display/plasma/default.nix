@@ -10,6 +10,7 @@ in
     };
   };
   config = lib.mkIf (cfg.enable) {
+    mods.hardware.network.ports = [{ from = 1714; to = 1764; }]; # Ports for KDE Connect
     services.xserver.enable = true;
     services.displayManager.sddm.enable = true;
     services.displayManager.defaultSession = lib.mkIf (cfg.defaultx11) "plasmax11";
