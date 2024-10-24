@@ -11,6 +11,12 @@
     };
   };
 
+  services.kdeconnect = {
+    enable = true;
+    indicator = true;
+  };
+  
+
   persistif = {
     directories = [
       ".local/share/kwalletd"
@@ -21,7 +27,6 @@
     files = [
       ".config/plasma-org.kde.plasma.desktop-appletsrc"
       ".config/plasmashellrc"
-      ".config/touchpadxlibinputrc"
       ".local/share/user-places.xbel"
     ];
   };
