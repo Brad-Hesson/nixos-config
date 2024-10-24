@@ -3,9 +3,10 @@
   imports = [
     ./hardware-configuration.nix
     ./nvidia.nix
-    ./display.nix
     ./network.nix
   ];
+
+  mods.display.plasma = { enable = true; defaultx11 = true; };
 
   impermanence = {
     enable = true;
