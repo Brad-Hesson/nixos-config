@@ -3,8 +3,8 @@
   hardware.bluetooth.powerOnBoot = true;
   environment.systemPackages = [ pkgs.bluez ];
 
-  # environment.persistence."/persist".directories = [
-  #   "/var/lib/bluetooth"
-  # ];
+  persistif.directories = [
+    "/var/lib/bluetooth"
+  ];
 
 }
