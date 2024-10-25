@@ -2,6 +2,9 @@
   networking.hostName = "sleet";
   imports = [
     ./hardware-configuration.nix
+    ./ms-surface.nix
+    ./nvidia.nix
+    ./secure-boot.nix
   ];
 
   mods.display.plasma = { enable = true; defaultx11 = true; };
@@ -27,4 +30,6 @@
       wget
     ];
   };
+
+  system.stateVersion = "24.11";
 }
