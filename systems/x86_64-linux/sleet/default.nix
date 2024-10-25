@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   networking.hostName = "sleet";
   imports = [
     ./hardware-configuration.nix
@@ -18,7 +18,7 @@
     "/var/lib/nixos" # persists uids and gids
   ];
 
-   users.users.bhesson = {
+  users.users.bhesson = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     hashedPassword = "$y$j9T$c1qsrXwEJdndbCCmnfoUn/$RzG1bgFBSTjWNFrl/H3aV99bWZFU2rXttY9uXQgdsI9";
@@ -29,6 +29,23 @@
       nix-output-monitor
       wget
     ];
+  };
+
+  # ZFS
+  networking.hostId = "00000000";
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound.
+  services.pipewire = {
+    enable = true;
+    pulse.enable = true;
+    alsa = {
+      enable = true;
+      support32Bit = true;
+    };
+    audio.enable = true;
   };
 
   system.stateVersion = "24.11";

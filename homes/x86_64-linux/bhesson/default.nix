@@ -2,13 +2,13 @@
   imports = [ ];
   programs.bash.enable = true;
 
-  persistif.directories = [ "Desktop" "Pictures" ];
-  
+  persistif.directories = [ "Desktop" "Pictures" ".ssh" "Code" ];
+
   programs.git = {
     enable = true;
     userName = "Brad Hesson";
     userEmail = "brad.hesson@outlook.com";
   };
-  
+
   home.stateVersion = "24.05";
 }

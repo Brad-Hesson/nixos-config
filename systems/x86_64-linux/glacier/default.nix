@@ -18,7 +18,7 @@
 
   users.users.bhesson = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "networkmanager" "dialout" ];
     hashedPassword = "$y$j9T$c1qsrXwEJdndbCCmnfoUn/$RzG1bgFBSTjWNFrl/H3aV99bWZFU2rXttY9uXQgdsI9";
     packages = with pkgs; [
       tree
@@ -29,11 +29,11 @@
     ];
   };
 
-  environment.systemPackages = [ ];
-
   # Boot
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader = {
+    systemd-boot.enable = true;
+    efi.canTouchEfiVariables = true;
+  };
 
   # Home Manager
   home-manager.backupFileExtension = "backup";
@@ -48,6 +48,11 @@
   services.pipewire = {
     enable = true;
     pulse.enable = true;
+    alsa = {
+      enable = true;
+      support32Bit = true;
+    };
+    audio.enable = true;
   };
 
   # Some programs need SUID wrappers, can be configured further or are
