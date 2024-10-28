@@ -10,5 +10,7 @@
     userEmail = "brad.hesson@outlook.com";
   };
 
+  mods.apps.prismlauncher.enable = true;
+
   home.stateVersion = "24.05";
 }
