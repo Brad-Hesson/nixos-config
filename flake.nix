@@ -19,6 +19,10 @@
       inputs.home-manager.follows = "home-manager";
     };
     impermanence.url = "github:nix-community/impermanence";
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = flakes: (import ./utils/mkOutputs.nix) flakes {
