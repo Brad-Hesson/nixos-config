@@ -16,5 +16,6 @@
   programs.steam.enable = true;
   programs.gamemode.enable = true;
 
+  virtualisation.spiceUSBRedirection.enable = true;
 
 }
