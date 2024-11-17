@@ -5,8 +5,8 @@
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
+  services.displayManager.defaultSession = "plasmax11";
   services.desktopManager.plasma6.enable = true;
-  services.xserver.displayManager.defaultSession = "plasmax11";
 
   # Enable the Gnome Desktop Environment.
   # services.xserver.displayManager.gdm.enable = true;

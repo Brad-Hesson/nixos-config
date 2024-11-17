@@ -2,6 +2,8 @@ flakes: { username, hostname, system, userModules, systemModules, ... }@sysargs:
 let
   pkgs = import flakes.nixpkgs {
     inherit system;
+    # Package ‘zfs-kernel-2.2.6-6.11.4’ is marked as broken
+    config.allowBroken = true;
     config.allowUnfree = true;
   };
 in

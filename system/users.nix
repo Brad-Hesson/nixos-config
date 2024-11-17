@@ -12,4 +12,7 @@
     "Desktop"
     ".ssh"
   ];
+  environment.persistence."/persist".directories = [
+    "/var/lib/nixos"
+  ];
 }
