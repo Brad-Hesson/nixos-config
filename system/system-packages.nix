@@ -18,4 +18,9 @@
 
   virtualisation.spiceUSBRedirection.enable = true;
 
+  # Labjack usb permissions
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0cd5", ATTR{idProduct}=="0007", ENV{ID_SECURITY_TOKEN}="1", GROUP="wheel"
+  '';
+
 }
