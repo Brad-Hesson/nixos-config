@@ -27,6 +27,7 @@
     configFile = {
       "kcminputrc"."Libinput/1118/2479/Microsoft Surface 045E:09AF Touchpad"."ClickMethod" = 2;
       "kcminputrc"."Libinput/1118/2479/Microsoft Surface 045E:09AF Touchpad"."NaturalScroll" = true;
+      "powerdevilrc"."AC/SuspendAndShutdown"."AutoSuspendAction" = 0;
     };
   };
 }
