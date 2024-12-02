@@ -27,7 +27,28 @@
     configFile = {
       "kcminputrc"."Libinput/1118/2479/Microsoft Surface 045E:09AF Touchpad"."ClickMethod" = 2;
       "kcminputrc"."Libinput/1118/2479/Microsoft Surface 045E:09AF Touchpad"."NaturalScroll" = true;
-      "powerdevilrc"."AC/SuspendAndShutdown"."AutoSuspendAction" = 0;
+      "powerdevilrc" = {
+        "AC/SuspendAndShutdown" = {
+          "AutoSuspendAction" = 0;
+          "LidAction" = 64;
+        };
+        "Battery/SuspendAndShutdown" = {
+          "AutoSuspendAction" = 0;
+          "LidAction" = 64;
+        };
+        "LowBattery/SuspendAndShutdown" = {
+          "AutoSuspendAction" = 0;
+          "LidAction" = 64;
+        };
+        "AC/Display" = {
+          "DisplayBrightness" = 100;
+          "UseProfileSpecificDisplayBrightness" = true;
+        };
+        "Battery/Display" = {
+          "DisplayBrightness" = 50;
+          "UseProfileSpecificDisplayBrightness" = true;
+        };
+      };
     };
   };
 }
