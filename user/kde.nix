@@ -10,6 +10,7 @@
     ];
     files = [
       ".config/plasma-org.kde.plasma.desktop-appletsrc"
+      ".config/kwinoutputconfig.json"
       ".config/plasmashellrc"
       ".config/touchpadxlibinputrc"
       ".local/share/user-places.xbel"
