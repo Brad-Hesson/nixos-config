@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ pkgs, config, ... }: {
   environment.systemPackages = with pkgs; [
     home-manager
     gparted
@@ -21,6 +21,17 @@
   # Labjack usb permissions
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTR{idVendor}=="0cd5", ATTR{idProduct}=="0007", ENV{ID_SECURITY_TOKEN}="1", GROUP="wheel"
+  '';
+
+  # persist the logs
+  environment.persistence."/persist".directories = [
+    "/var/log/journal"
+  ];
+
+  # make the machine-id static so that logs are continuous between boots
+  # this script just hashes the hostname so it remains constant, but different between systems
+  environment.etc."machine-id".source = pkgs.runCommandLocal "machine-id" { } ''
+    echo "${config.networking.hostName}" | md5sum | cut -f1 -d" " > $out
   '';
 
 }
