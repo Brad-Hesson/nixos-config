@@ -6,6 +6,7 @@
   ];
 
   mods.display.plasma = { enable = true; defaultx11 = true; };
+  mods.apps.steam.enable = true;
 
   impermanence = {
     enable = true;
