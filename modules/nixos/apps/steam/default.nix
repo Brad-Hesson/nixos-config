@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ lib, config, ... }:
 let cfg = config.mods.apps.steam; in {
   options = {
     mods.apps.steam.enable = lib.mkEnableOption "Steam";

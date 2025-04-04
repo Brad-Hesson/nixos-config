@@ -1,4 +1,4 @@
-{ inputs, lib, config, ... }: {
+{ ... }: {
   imports = [ ];
   programs.bash.enable = true;
 
