@@ -1,14 +1,8 @@
 { lib, inputs, config, ... }: {
   imports = [ inputs.nur.modules.homeManager.default ];
 
-  programs.firefox = {
-    enable = true;
-    # profiles.default.extensions.packages = with config.repos.rycee.firefox-addons; [
-    #     bitwarden
-    #     ublock-origin
-    #     plasma-integration
-    #   ];
-  };
+  programs.firefox.enable = true;
+
   # make touchscreen scrolling work
   # NOTE: only works if programs.bash.enable = true, meaning
   #       that home-manager is managing the shell
