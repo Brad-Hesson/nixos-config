@@ -5,7 +5,7 @@
     ./nvidia.nix
   ];
 
-  mods.display.plasma = { enable = true; defaultx11 = true; };
+  mods.display.plasma = { enable = true; defaultx11 = false; };
   mods.apps.steam.enable = true;
 
   impermanence = {
