@@ -1,15 +1,13 @@
 { lib, inputs, config, ... }: {
-  imports = [ inputs.nur.hmModules.nur ];
+  imports = [ inputs.nur.modules.homeManager.default ];
 
   programs.firefox = {
     enable = true;
-    profiles.default = {
-      extensions = with config.nur.repos.rycee.firefox-addons; [
-        bitwarden
-        ublock-origin
-        plasma-integration
-      ];
-    };
+    # profiles.default.extensions.packages = with config.repos.rycee.firefox-addons; [
+    #     bitwarden
+    #     ublock-origin
+    #     plasma-integration
+    #   ];
   };
   # make touchscreen scrolling work
   # NOTE: only works if programs.bash.enable = true, meaning
