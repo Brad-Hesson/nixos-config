@@ -1,15 +1,15 @@
 { lib, ... }: {
   home-manager.users.bhesson = { config, flakes, ... }: {
-    imports = [ flakes.nur.hmModules.nur ];
+    imports = [ flakes.nur.modules.homeManager.default ];
     programs.firefox = {
       enable = true;
-      profiles.default = {
-        extensions = with config.nur.repos.rycee.firefox-addons; [
-          bitwarden
-          ublock-origin
-          plasma-integration
-        ];
-      };
+      # profiles.default = {
+      #   extensions = with flakes.nur.modules.homeManager.default.nur.repos.rycee.firefox-addons; [
+      #     bitwarden
+      #     ublock-origin
+      #     plasma-integration
+      #   ];
+      # };
     };
     # make touchscreen scrolling work
     # NOTE: only works if programs.bash.enable = true, meaning
