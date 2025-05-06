@@ -15,6 +15,7 @@
   };
   persistif.directories = [
     "/var/lib/nixos" # persists uids and gids
+    "/etc/ssh"
   ];
 
   users.users.bhesson = {
