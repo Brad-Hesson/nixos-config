@@ -47,6 +47,7 @@ in
       ];
       files = [
         ".config/plasma-org.kde.plasma.desktop-appletsrc"
+        ".config/kwinoutputconfig.json"
         ".config/plasmashellrc"
         ".local/share/user-places.xbel"
       ];
