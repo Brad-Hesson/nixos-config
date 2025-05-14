@@ -7,7 +7,7 @@
     ./secure-boot.nix
   ];
 
-  mods.display.plasma = { enable = true; defaultx11 = true; };
+  mods.display.plasma = { enable = true; defaultX11 = true; };
 
   impermanence = {
     enable = true;
