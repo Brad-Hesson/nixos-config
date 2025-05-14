@@ -4,10 +4,18 @@
 
   persistif.directories = [ "Desktop" "Pictures" ".ssh" "Code" ];
 
-  programs.git = {
-    enable = true;
-    userName = "Brad Hesson";
-    userEmail = "brad.hesson@outlook.com";
+  programs = {
+    git = {
+      enable = true;
+      userName = "Brad Hesson";
+      userEmail = "brad.hesson@outlook.com";
+    };
+    gh = {
+      enable = true;
+      gitCredentialHelper = {
+        enable = true;
+      };
+    };
   };
 
   mods.apps.prismlauncher.enable = true;
