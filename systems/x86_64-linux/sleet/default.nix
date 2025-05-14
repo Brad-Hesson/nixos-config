@@ -38,16 +38,5 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # Enable sound.
-  services.pipewire = {
-    enable = true;
-    pulse.enable = true;
-    alsa = {
-      enable = true;
-      support32Bit = true;
-    };
-    audio.enable = true;
-  };
-
   system.stateVersion = "24.11";
 }
