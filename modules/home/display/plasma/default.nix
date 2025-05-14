@@ -13,6 +13,24 @@ in
         colorScheme = "BreezeDark";
         clickItemTo = "select";
       };
+      # TODO: move to glacier system folder somehow (this is a home-manager thing)
+      configFile = {
+        "powerdevilrc" = {
+          "AC/Display" = {
+            "DimDisplayIdleTimeoutSec" = -1;
+            "DimDisplayWhenIdle" = false;
+            "TurnOffDisplayIdleTimeoutSec" = -1;
+            "TurnOffDisplayWhenIdle" = false;
+          };
+          "AC/Performance" = {
+            "PowerProfile" = "performance";
+          };
+          "AC/SuspendAndShutdown" = {
+            "AutoSuspendAction" = 0;
+            "PowerButtonAction" = 8;
+          };
+        };
+      };
     };
 
     services.kdeconnect = {
