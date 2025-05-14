@@ -8,7 +8,7 @@
   ];
 
   mods.display.plasma = { enable = true; defaultX11 = true; };
-  mods.apps.prusaslicer.enable = true;
+  mods.apps.steam.enable = true;
 
   impermanence = {
     enable = true;

@@ -4,6 +4,11 @@
 
   persistif.directories = [ "Desktop" "Pictures" ".ssh" "Code" ];
 
+  home.packages = with pkgs; [
+    vlc
+    qdirstat
+  ];
+
   programs = {
     git = {
       enable = true;
@@ -19,6 +24,7 @@
   };
 
   mods.apps.prismlauncher.enable = true;
+  mods.apps.prusaslicer.enable = true;
 
   home.stateVersion = "24.05";
 }
