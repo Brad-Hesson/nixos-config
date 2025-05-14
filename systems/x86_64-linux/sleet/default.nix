@@ -21,14 +21,13 @@
 
   users.users.bhesson = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    description = "Brad Hesson";
+    extraGroups = [ "networkmanager" "wheel" "docker" "dialout" "systemd-journal" ];
     hashedPassword = "$y$j9T$c1qsrXwEJdndbCCmnfoUn/$RzG1bgFBSTjWNFrl/H3aV99bWZFU2rXttY9uXQgdsI9";
     packages = with pkgs; [
       tree
-      prismlauncher
       nh
       nix-output-monitor
-      wget
     ];
   };
 
