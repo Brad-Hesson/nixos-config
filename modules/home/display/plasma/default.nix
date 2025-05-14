@@ -15,19 +15,38 @@ in
       };
       # TODO: move to glacier system folder somehow (this is a home-manager thing)
       configFile = {
+        "kcminputrc"."Libinput/1118/2479/Microsoft Surface 045E:09AF Touchpad" = {
+          "ClickMethod" = 2;
+          "NaturalScroll" = true;
+        };
         "powerdevilrc" = {
           "AC/Display" = {
+            "DisplayBrightness" = 100;
+            "UseProfileSpecificDisplayBrightness" = true;
             "DimDisplayIdleTimeoutSec" = -1;
             "DimDisplayWhenIdle" = false;
             "TurnOffDisplayIdleTimeoutSec" = -1;
             "TurnOffDisplayWhenIdle" = false;
           };
+          "Battery/Display" = {
+            "DisplayBrightness" = 50;
+            "UseProfileSpecificDisplayBrightness" = true;
+          };
           "AC/Performance" = {
             "PowerProfile" = "performance";
           };
           "AC/SuspendAndShutdown" = {
-            "AutoSuspendAction" = 0;
             "PowerButtonAction" = 8;
+            "AutoSuspendAction" = 0;
+            "LidAction" = 64;
+          };
+          "Battery/SuspendAndShutdown" = {
+            "AutoSuspendAction" = 0;
+            "LidAction" = 64;
+          };
+          "LowBattery/SuspendAndShutdown" = {
+            "AutoSuspendAction" = 0;
+            "LidAction" = 64;
           };
         };
       };
