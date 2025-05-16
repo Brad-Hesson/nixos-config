@@ -18,6 +18,7 @@
     "/etc/ssh"
   ];
 
+  nix.settings.trusted-users = [ "bhesson" ];
   users.users.bhesson = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "dialout" ];
