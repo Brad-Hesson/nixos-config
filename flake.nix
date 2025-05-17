@@ -27,6 +27,10 @@
       url = "github:nix-community/lanzaboote/v0.4.2";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nanofab-cli = {
+      url = "github:Brad-Hesson/nanofab-cli";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs: inputs.snowfall-lib.mkFlake {
