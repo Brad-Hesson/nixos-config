@@ -11,7 +11,7 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nur.url = "github:nix-community/NUR";
+    nur = { url = "github:nix-community/NUR"; inputs.nixpkgs.follows = "nixpkgs"; };
     impermanence.url = "github:nix-community/impermanence";
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
