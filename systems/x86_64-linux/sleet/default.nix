@@ -9,6 +9,7 @@
 
   mods.display.plasma = { enable = true; defaultX11 = true; };
   mods.apps.steam.enable = true;
+  mods.plymouth.enable = false;
 
   impermanence = {
     enable = true;
