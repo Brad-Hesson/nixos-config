@@ -274,11 +274,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1747475785,
-        "narHash": "sha256-/oAuc2l1uiN9BEdWQNcbJMJI3tUAOzPil1TEP+++CTU=",
+        "lastModified": 1747859550,
+        "narHash": "sha256-aIp9VC/wjjqngl+0KIIUd/rvpTAQOM1kKPDzzJyjGS4=",
         "owner": "Brad-Hesson",
         "repo": "nanofab-cli",
-        "rev": "e06ab8d767b24670f720a1395ef4b9c689cae6da",
+        "rev": "54949df680c1b43dc39044befd1331865321f9ae",
         "type": "github"
       },
       "original": {
