@@ -1,13 +1,19 @@
-{ pkgs, config, lib, ... }: let cfg = config.mods.plymouth; in {
+{ pkgs, config, lib, ... }:
+let cfg = config.mods.bootSplash; in {
   options = {
-    mods.plymouth.enable = lib.mkEnableOption "Enable Plymouth";
+    mods.bootSplash.enable = lib.mkEnableOption "Enable Plymouth";
+    mods.bootSplash.theme = lib.mkOption {
+      default = "bgrt";
+      type = lib.types.str;
+      description = "Splash screen theme.";
+    };
   };
   config = lib.mkIf (cfg.enable) {
     fonts.packages = with pkgs; [ inter ];
     boot = {
       plymouth = {
         enable = true;
-        theme = "colorful_loop";
+        theme = cfg.theme;
         themePackages = [
           (pkgs.callPackage ./k-plasma-boot-screen.nix { })
           pkgs.adi1090x-plymouth-themes
@@ -27,7 +33,6 @@
       # It's still possible to open the bootloader list by pressing any key
       # It will just not appear on screen unless a key is pressed
       loader.timeout = 0;
-
     };
   };
 }

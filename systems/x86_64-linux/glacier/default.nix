@@ -5,9 +5,11 @@
     ./nvidia.nix
   ];
 
-  mods.display.plasma = { enable = true; defaultX11 = false; };
-  mods.apps.steam.enable = true;
-  mods.plymouth.enable = true;
+  mods = {
+    display.plasma = { enable = true; defaultX11 = false; };
+    apps.steam.enable = true;
+    bootSplash = { enable = true; theme = "colorful_loop"; };
+  };
 
   impermanence = {
     enable = true;

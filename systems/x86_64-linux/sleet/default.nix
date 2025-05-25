@@ -7,9 +7,10 @@
     ./secure-boot.nix
   ];
 
-  mods.display.plasma = { enable = true; defaultX11 = true; };
-  mods.apps.steam.enable = true;
-  mods.plymouth.enable = false;
+  mods = {
+    display.plasma = { enable = true; defaultX11 = true; };
+    apps.steam.enable = true;
+  };
 
   impermanence = {
     enable = true;
