@@ -15,6 +15,9 @@ in
       };
       # TODO: move to glacier system folder somehow (this is a home-manager thing)
       configFile = {
+        "kwinrc"."EdgeBarrier" = {
+          "EdgeBarrier" = 0;
+        };
         "kcminputrc"."Libinput/1118/2479/Microsoft Surface 045E:09AF Touchpad" = {
           "ClickMethod" = 2;
           "NaturalScroll" = true;
