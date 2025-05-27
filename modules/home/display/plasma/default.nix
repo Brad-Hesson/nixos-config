@@ -55,11 +55,6 @@ in
       };
     };
 
-    services.kdeconnect = {
-      enable = true;
-      indicator = true;
-    };
-
     persistif = {
       directories = [
         ".local/share/kwalletd"
