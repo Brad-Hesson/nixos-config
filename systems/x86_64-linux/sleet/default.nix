@@ -10,6 +10,7 @@
   mods = {
     display.plasma = { enable = true; defaultX11 = true; };
     apps.steam.enable = true;
+    bootSplash = { enable = true; theme = "bgrt"; };
   };
 
   impermanence = {
