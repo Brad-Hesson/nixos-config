@@ -7,7 +7,16 @@
   home.packages = with pkgs; [
     vlc
     qdirstat
+    gparted
+    nh
+    nix-output-monitor
+    wget
   ];
+
+  mods = {
+    apps.prismlauncher.enable = true;
+    apps.prusaslicer.enable = true;
+  };
 
   programs = {
     git = {
@@ -22,9 +31,6 @@
       };
     };
   };
-
-  mods.apps.prismlauncher.enable = true;
-  mods.apps.prusaslicer.enable = true;
 
   home.stateVersion = "24.05";
 }

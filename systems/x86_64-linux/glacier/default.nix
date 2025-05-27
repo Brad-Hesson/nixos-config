@@ -24,15 +24,9 @@
   nix.settings.trusted-users = [ "bhesson" ];
   users.users.bhesson = {
     isNormalUser = true;
+    description = "Brad Hesson";
     extraGroups = [ "wheel" "networkmanager" "dialout" ];
     hashedPassword = "$y$j9T$c1qsrXwEJdndbCCmnfoUn/$RzG1bgFBSTjWNFrl/H3aV99bWZFU2rXttY9uXQgdsI9";
-    packages = with pkgs; [
-      tree
-      prismlauncher
-      nh
-      nix-output-monitor
-      wget
-    ];
   };
 
   # Boot
