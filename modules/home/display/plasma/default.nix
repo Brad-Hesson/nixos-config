@@ -23,10 +23,6 @@ in
           "NaturalScroll" = true;
         };
         "powerdevilrc" = {
-          "AC/RunScript" = {
-            "IdleTimeoutCommand" = "/home/bhesson/Desktop/screensaver.sh";
-            "RunScriptIdleTimeoutSec" = 1800;
-          };
           "AC/Display" = {
             "DisplayBrightness" = 100;
             "UseProfileSpecificDisplayBrightness" = true;
