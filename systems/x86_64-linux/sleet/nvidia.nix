@@ -7,12 +7,20 @@
   # Load nvidia driver for Xorg and Wayland
   services.xserver.videoDrivers = [ "nvidia" ];
 
+  boot.kernelParams = [ "nvidia_drm.fbdev=1" "nvidia-drm.modeset=1" ];
+
+  environment.sessionVariables = {
+    LIBVA_DRIVER_NAME = "nvidia";
+    KWIN_DRM_DEVICES = "/dev/dri/card2";
+    # KWIN_DRM_DEVICES = "/dev/dri/card2:/dev/dri/card2";
+  };
+
   hardware.nvidia = {
     # Modesetting is required.
     modesetting.enable = true;
 
     # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    powerManagement.enable = false;
+    powerManagement.enable = true;
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
     powerManagement.finegrained = false;
@@ -24,7 +32,7 @@
     # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
     # Only available from driver 515.43.04+
     # Currently alpha-quality/buggy, so false is currently the recommended setting.
-    open = false;
+    open = true;
 
     # Enable the Nvidia settings menu,
     # accessible via `nvidia-settings`.
