@@ -1,3 +1,4 @@
-.direnv
-.envrc
-.vscode
+/.direnv
+/.envrc
+/.vscode
+/result
