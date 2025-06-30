@@ -11,7 +11,6 @@
 
   environment.sessionVariables = {
     LIBVA_DRIVER_NAME = "nvidia";
-    KWIN_DRM_DEVICES = "/dev/dri/card2";
     # KWIN_DRM_DEVICES = "/dev/dri/card2:/dev/dri/card2";
   };
 
