@@ -43,7 +43,12 @@
       device = "/dev/disk/by-uuid/490f9314-1022-49d8-aa58-fce662a5c65a";
       fsType = "ext4";
     };
-
+      
+  fileSystems."/hdd" =
+    {
+      device = "/dev/disk/by-uuid/9dd53337-3c42-4518-84e6-a329d2df15a7";
+      fsType = "ext4";
+    };
 
   swapDevices =
     [{ device = "/dev/disk/by-uuid/20a26cc0-e556-4b44-8223-175259a91e19"; }];
