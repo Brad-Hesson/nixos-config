@@ -15,7 +15,7 @@
   impermanence = {
     enable = true;
     persistPath = "/persist";
-    snapshotPath = "zpool/root@blank";
+    snapshotPath = "rpool/root@blank";
   };
   persistif.directories = [
     "/var/lib/nixos" # persists uids and gids

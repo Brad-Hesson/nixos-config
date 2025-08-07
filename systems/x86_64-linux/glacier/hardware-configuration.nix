@@ -16,25 +16,25 @@
 
   fileSystems."/" =
     {
-      device = "zpool/root";
+      device = "rpool/root";
       fsType = "zfs";
     };
 
   fileSystems."/nix" =
     {
-      device = "zpool/nix";
+      device = "rpool/nix";
       fsType = "zfs";
     };
 
   fileSystems."/persist" =
     {
-      device = "zpool/persist";
+      device = "rpool/persist";
       fsType = "zfs";
     };
 
   fileSystems."/boot" =
     {
-      device = "/dev/disk/by-uuid/5B84-3ADB";
+      device = "/dev/disk/by-uuid/6E15-67B4";
       fsType = "vfat";
     };
 
@@ -51,7 +51,7 @@
     };
 
   swapDevices =
-    [{ device = "/dev/disk/by-uuid/20a26cc0-e556-4b44-8223-175259a91e19"; }];
+    [{ device = "/dev/disk/by-uuid/6690be2d-f8d2-46bf-a5a4-29899f4ef011"; }];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
