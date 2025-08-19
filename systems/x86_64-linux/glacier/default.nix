@@ -19,10 +19,8 @@
   };
   persistif.directories = [
     "/var/lib/nixos" # persists uids and gids
-    "/etc/ssh"
   ];
 
-  nix.settings.trusted-users = [ "bhesson" ];
   users.users.bhesson = {
     isNormalUser = true;
     description = "Brad Hesson";
