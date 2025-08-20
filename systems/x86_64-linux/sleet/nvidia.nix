@@ -1,4 +1,4 @@
-{ config, ... }: {
+{ config, lib, ... }: {
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
@@ -7,11 +7,13 @@
   # Load nvidia driver for Xorg and Wayland
   services.xserver.videoDrivers = [ "nvidia" ];
 
-  boot.kernelParams = [ "nvidia_drm.fbdev=1" "nvidia-drm.modeset=1" ];
-
+  boot.kernelParams = [ "nvidia_drm.fbdev=0" "nvidia-drm.modeset=1" ];
+  
   environment.sessionVariables = {
     LIBVA_DRIVER_NAME = "nvidia";
-    # KWIN_DRM_DEVICES = "/dev/dri/card2:/dev/dri/card2";
+    __NV_PRIME_RENDER_OFFLOAD = "1";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";   # OpenGL/XWayland
+    __VK_LAYER_NV_optimus     = "1";        # Vulkan
   };
 
   hardware.nvidia = {

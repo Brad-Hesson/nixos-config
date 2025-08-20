@@ -8,7 +8,7 @@
   ];
 
   mods = {
-    display.plasma = { enable = true; defaultX11 = true; };
+    display.plasma = { enable = true; defaultX11 = false; };
     apps.steam.enable = true;
     bootSplash = { enable = true; theme = "bgrt"; };
     ios-drivers = { enable = true; };
