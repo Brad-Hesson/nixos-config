@@ -21,8 +21,10 @@
   programs = {
     git = {
       enable = true;
-      userName = "Brad Hesson";
-      userEmail = "brad.hesson@outlook.com";
+      settings.user = {
+        name = "Brad Hesson";
+        email = "brad.hesson@outlook.com";
+      };
     };
     gh = {
       enable = true;

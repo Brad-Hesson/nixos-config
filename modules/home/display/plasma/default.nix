@@ -3,7 +3,7 @@ let
   osCfg = osConfig.mods.display.plasma;
 in
 {
-  imports = [ inputs.plasma-manager.homeManagerModules.plasma-manager ];
+  imports = [ inputs.plasma-manager.homeModules.plasma-manager ];
   config = lib.mkIf (osCfg.enable) {
     programs.plasma = {
       enable = true;
