@@ -8,7 +8,6 @@
   mods = {
     display.plasma = { enable = true; defaultX11 = false; };
     apps.steam.enable = true;
-    apps.coolercontrol.enable = true;
     bootSplash = { enable = true; theme = "colorful_loop"; };
   };
 
