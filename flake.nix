@@ -33,11 +33,22 @@
     };
   };
 
-  outputs = inputs: inputs.snowfall-lib.mkFlake {
-    inherit inputs;
-    src = ./.;
-    channels-config = {
-      allowUnfree = true;
+  outputs = inputs: {
+    nixosConfigurations."sleet" = inputs.nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = inputs;
+      modules = [
+        ({ pkgs, inputs, lib, ... }: {
+          imports = [ inputs.lanzaboote.nixosModules.lanzaboote ];
+          boot.loader.systemd-boot.enable = lib.mkForce false;
+          boot.lanzaboote = {
+            enable = true;
+            pkiBundle = "/etc/secureboot";
+          };
+          fileSystems."/" = { device = "/"; };
+        })
+      ];
     };
+
   };
 }
