@@ -1,3 +1,0 @@
-{
-  persistif.directories = [ ".cargo" ".rustup" ];
-}

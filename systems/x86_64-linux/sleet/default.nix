@@ -7,22 +7,6 @@
     ./secure-boot.nix
   ];
 
-  mods = {
-    display.plasma = { enable = true; defaultX11 = false; };
-    apps.steam.enable = true;
-    bootSplash = { enable = true; theme = "bgrt"; };
-    ios-drivers = { enable = true; };
-  };
-
-  impermanence = {
-    enable = true;
-    persistPath = "/persist";
-    snapshotPath = "tank/local/root@blank";
-  };
-  persistif.directories = [
-    "/var/lib/nixos" # persists uids and gids
-  ];
-
   users.users.bhesson = {
     isNormalUser = true;
     description = "Brad Hesson";

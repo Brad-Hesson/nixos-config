@@ -17,8 +17,4 @@
     sbctl
   ];
 
-  persistif.directories = [
-    "/etc/secureboot"
-  ];
-
 }
