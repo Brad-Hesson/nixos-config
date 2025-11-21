@@ -7,7 +7,10 @@
 
   mods = {
     display.plasma = { enable = true; defaultX11 = false; };
-    apps.steam.enable = true;
+    apps = {
+      steam.enable = true;
+      sunshine.enable = true;
+    };
     bootSplash = { enable = true; theme = "colorful_loop"; };
   };
 
