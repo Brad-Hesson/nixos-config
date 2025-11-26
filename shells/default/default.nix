@@ -1,5 +1,5 @@
-{ flakes, mkShell, system, ... }: mkShell {
+{ inputs, mkShell, system, ... }: mkShell {
   shellHook = ''
-    ${flakes.brad-utils.lib.${system}.vscodeSettingsHook {}}
+    ${inputs.brad-utils.lib.${system}.vscodeSettingsHook {}}
   '';
 }
