@@ -1,7 +1,5 @@
-{ pkgs, mkShell, ... }: mkShell {
-  # Create your shell
-  packages = with pkgs; [
-    nixpkgs-fmt
-    nixd
-  ];
+{ flakes, mkShell, system, ... }: mkShell {
+  shellHook = ''
+    ${flakes.brad-utils.lib.${system}.vscodeSettingsHook {}}
+  '';
 }
