@@ -5,6 +5,7 @@ let cfg = config.mods.apps.steam; in {
   };
   config = lib.mkIf (cfg.enable) {
     programs.steam.enable = true;
+    programs.gamemode.enable = true;
 
     mods.hardware.network.TCPPorts = [27036 27937];
     mods.hardware.network.UDPPorts = [27031 27036];
