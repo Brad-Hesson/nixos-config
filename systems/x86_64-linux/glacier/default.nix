@@ -13,6 +13,7 @@
     };
     bootSplash = { enable = true; theme = "colorful_loop"; };
   };
+  powerManagement.cpuFreqGovernor = "performance";
 
   impermanence = {
     enable = true;
