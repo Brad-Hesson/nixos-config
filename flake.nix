@@ -32,10 +32,7 @@
       url = "github:Brad-Hesson/nanofab-cli";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    brad-utils = {
-      url = "github:Brad-Hesson/brad-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    brad-utils.url = "github:Brad-Hesson/brad-utils";
   };
 
   outputs = inputs: inputs.snowfall-lib.mkFlake {

@@ -1,5 +1,5 @@
-{ inputs, mkShell, system, ... }: mkShell {
+{ inputs, mkShell, pkgs, ... }: mkShell {
   shellHook = ''
-    ${inputs.brad-utils.lib.${system}.vscodeSettingsHook {}}
+    ${(inputs.brad-utils.mkLib pkgs).vscodeSettingsHook {}}
   '';
 }
