@@ -1,6 +1,6 @@
 { inputs, pkgs, ... }: {
   imports = [ inputs.nixos-hardware.nixosModules.microsoft-surface-common ];
-  hardware.microsoft-surface.kernelVersion = "stable";
+  # hardware.microsoft-surface.kernelVersion = "stable";
   services.iptsd.enable = true;
 
   services.thermald.enable = true;
