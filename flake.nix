@@ -33,6 +33,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     brad-utils.url = "github:Brad-Hesson/brad-utils";
+    kairpods = {
+      url = "github:Brad-Hesson/kairpods?ref=add-nixos-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
   outputs = inputs: inputs.snowfall-lib.mkFlake {
