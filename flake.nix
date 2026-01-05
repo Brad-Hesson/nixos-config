@@ -34,7 +34,7 @@
     };
     brad-utils.url = "github:Brad-Hesson/brad-utils";
     kairpods = {
-      url = "github:Brad-Hesson/kairpods?ref=add-nixos-flake";
+      url = "github:can1357/kAirPods";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };

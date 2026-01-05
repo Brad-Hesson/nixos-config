@@ -39,11 +39,11 @@
     },
     "crane": {
       "locked": {
-        "lastModified": 1766194365,
-        "narHash": "sha256-4AFsUZ0kl6MXSm4BaQgItD0VGlEKR3iq7gIaL7TjBvc=",
+        "lastModified": 1767461147,
+        "narHash": "sha256-TH/xTeq/RI+DOzo+c+4F431eVuBpYVwQwBxzURe7kcI=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "7d8ec2c71771937ab99790b45e6d9b93d15d9379",
+        "rev": "7d59256814085fd9666a2ae3e774dc5ee216b630",
         "type": "github"
       },
       "original": {
@@ -317,17 +317,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1766572108,
-        "narHash": "sha256-+TViebfu5Ie3/IqyU+ul2Aei+DyVYKgFf4d3HQMqGXc=",
-        "owner": "Brad-Hesson",
-        "repo": "kairpods",
-        "rev": "792585c71dd38b56949c47a19b0fd47d27c95a9d",
+        "lastModified": 1767585175,
+        "narHash": "sha256-RgaLfAZ7P14opr26RYzHmeAlL9r6F6GpNVcXVUa4UM0=",
+        "owner": "can1357",
+        "repo": "kAirPods",
+        "rev": "1782439da7cc9afb46f2d28f47e964f182408e42",
         "type": "github"
       },
       "original": {
-        "owner": "Brad-Hesson",
-        "ref": "add-nixos-flake",
-        "repo": "kairpods",
+        "owner": "can1357",
+        "repo": "kAirPods",
         "type": "github"
       }
     },
