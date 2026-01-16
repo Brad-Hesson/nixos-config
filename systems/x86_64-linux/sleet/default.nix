@@ -51,8 +51,5 @@
   # ZFS
   networking.hostId = "00000000";
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
   system.stateVersion = "24.11";
 }
