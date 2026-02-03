@@ -12,4 +12,8 @@
       cups-browsed
     ];
   };
+
+  persistif.directories = [
+    "/etc/cups"
+  ];
 }
