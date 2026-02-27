@@ -3,5 +3,6 @@
 
   persistif.directories = [
     ".local/share/krdc"
+    ".config/freerdp"
   ];
 }
