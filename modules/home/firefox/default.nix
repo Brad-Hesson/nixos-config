@@ -1,6 +1,4 @@
-{ lib, inputs, config, ... }: {
-  imports = [ inputs.nur.modules.homeManager.default ];
-
+{ lib, config, ... }: {
   programs.firefox.enable = true;
 
   # make touchscreen scrolling work

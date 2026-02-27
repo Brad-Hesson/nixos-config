@@ -17,7 +17,7 @@ let cfg = config.mods.apps.steam; in {
     };
     environment.systemPackages = with pkgs; [
       # wine is sometimes needed to install Trackmania
-      wineWowPackages.stable
+      wineWow64Packages.stable
       # Command to install latest ProtonGE
       protonup-ng
     ];
