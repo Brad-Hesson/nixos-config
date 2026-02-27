@@ -7,7 +7,7 @@ in
   config = lib.mkIf (osCfg.enable) {
     programs.plasma = {
       enable = true;
-      overrideConfig = true;
+      overrideConfig = false;
       workspace = {
         theme = "breeze-dark";
         colorScheme = "BreezeDark";
