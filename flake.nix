@@ -21,8 +21,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
-    # nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-    nixos-hardware.url = "github:8bitbuddhist/nixos-hardware/surface-rust-target-spec-fix";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    # nixos-hardware.url = "github:8bitbuddhist/nixos-hardware/surface-rust-target-spec-fix";
     lanzaboote = {
       url = "github:nix-community/lanzaboote/master";
       inputs.nixpkgs.follows = "nixpkgs";
