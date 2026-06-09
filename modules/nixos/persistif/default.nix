@@ -21,6 +21,7 @@ in
     {
       # persisted values may be necessary for boot
       fileSystems.${cfg.persistPath}.neededForBoot = true;
+      boot.zfs.forceImportRoot = false;
 
       # rollback to the provided snapshot on each boot
       # boot.initrd.postDeviceCommands = lib.mkAfter ''
