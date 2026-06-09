@@ -9,7 +9,7 @@
     display.plasma = { enable = true; defaultX11 = false; };
     apps = {
       steam.enable = true;
-      sunshine.enable = true;
+      sunshine.enable = false; # it isn't building
     };
     bootSplash = { enable = true; theme = "colorful_loop"; };
   };
@@ -19,6 +19,7 @@
     enable = true;
     persistPath = "/persist";
     snapshotPath = "rpool/root@blank";
+    pool = "rpool";
   };
   persistif.directories = [
     "/var/lib/nixos" # persists uids and gids

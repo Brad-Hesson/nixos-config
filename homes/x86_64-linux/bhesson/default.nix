@@ -25,6 +25,7 @@
         name = "Brad Hesson";
         email = "brad.hesson@outlook.com";
       };
+      signing.format = null;
     };
     gh = {
       enable = true;

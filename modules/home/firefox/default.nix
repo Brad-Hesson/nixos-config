@@ -11,4 +11,5 @@
       MOZ_USE_XINPUT2 = "1";
     };
   persistif.directories = [ ".mozilla" ];
+  programs.firefox.configPath = ".mozilla/firefox";
 }

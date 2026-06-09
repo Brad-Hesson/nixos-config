@@ -18,6 +18,7 @@
     enable = true;
     persistPath = "/persist";
     snapshotPath = "tank/local/root@blank";
+    pool = "tank";
   };
   persistif.directories = [
     "/var/lib/nixos" # persists uids and gids
