@@ -7,13 +7,13 @@
   # Load nvidia driver for Xorg and Wayland
   services.xserver.videoDrivers = [ "nvidia" ];
 
-  boot.kernelParams = [ "nvidia_drm.fbdev=0" "nvidia-drm.modeset=1" ];
-  
+
+  # force things to run with the gpu
   environment.sessionVariables = {
     LIBVA_DRIVER_NAME = "nvidia";
     __NV_PRIME_RENDER_OFFLOAD = "1";
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia";   # OpenGL/XWayland
-    __VK_LAYER_NV_optimus     = "1";        # Vulkan
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL/XWayland
+    __VK_LAYER_NV_optimus = "NVIDIA_only"; # Vulkan
   };
 
   hardware.nvidia = {

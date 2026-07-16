@@ -8,12 +8,6 @@
     enable32Bit = true;
   };
 
-  boot.initrd.kernelModules = [
-    "nvidia"
-    "nvidia_modeset"
-    "nvidia_drm"
-    "nvidia_uvm"
-  ];
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement = {
