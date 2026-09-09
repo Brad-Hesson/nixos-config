@@ -63,9 +63,18 @@ in
         ".local/share/dolphin"
       ];
       files = [
-        ".config/plasma-org.kde.plasma.desktop-appletsrc"
-        ".config/kwinoutputconfig.json"
-        ".config/plasmashellrc"
+        {
+          file = ".config/plasma-org.kde.plasma.desktop-appletsrc";
+          method = "symlink";
+        }
+        {
+          file = ".config/kwinoutputconfig.json";
+          method = "symlink";
+        }
+        {
+          file = ".config/plasmashellrc";
+          method = "symlink";
+        }
         ".local/share/user-places.xbel"
       ];
     };
