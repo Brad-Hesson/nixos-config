@@ -17,5 +17,13 @@ in
     services.displayManager.defaultSession = lib.mkIf (cfg.defaultX11) "plasmax11";
     services.desktopManager.plasma6.enable = true;
     services.xserver.xkb.layout = "us";
+    # enforce that plasma-manager runs after the portal is started, otherwise
+    # themes will not be applied correctly
+    systemd.user.services."app-plasma\\x2dmanager\\x2dautostart@autostart" = {
+      overrideStrategy = "asDropin";
+      enableDefaultPath = false;
+      wants = [ "plasma-xdg-desktop-portal-kde.service" ];
+      after = [ "plasma-xdg-desktop-portal-kde.service" ];
+    };
   };
 }
