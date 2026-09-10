@@ -1,21 +1,16 @@
 { inputs, pkgs, ... }: {
-  imports = [ inputs.nixos-hardware.nixosModules.microsoft-surface-common ];
+  imports = [
+    inputs.nixos-hardware.nixosModules.microsoft-surface-common
+    # ./surface-dtx-daemon.nix
+  ];
+
   hardware.microsoft-surface.kernelVersion = "stable";
   services.iptsd.enable = true;
+  environment.systemPackages = [
+    pkgs.surface-control
+  ];
 
+  # thermal handling
   services.thermald.enable = true;
-
-  environment.systemPackages = [ pkgs.auto-cpufreq pkgs.surface-control ];
-  services.power-profiles-daemon.enable = false;
-  services.auto-cpufreq.enable = true;
-  services.auto-cpufreq.settings = {
-    battery = {
-      governor = "powersave";
-      turbo = "never";
-    };
-    charger = {
-      governor = "performance";
-      turbo = "auto";
-    };
-  };
+  services.power-profiles-daemon.enable = true;
 }
