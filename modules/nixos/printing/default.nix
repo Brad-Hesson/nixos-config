@@ -14,6 +14,6 @@
   };
 
   persistif.directories = [
-    "/etc/cups"
+    "/var/lib/cups"
   ];
 }
