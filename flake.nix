@@ -11,7 +11,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    impermanence.url = "github:nix-community/impermanence";
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -21,8 +25,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-    # nixos-hardware.url = "github:8bitbuddhist/nixos-hardware/surface-rust-target-spec-fix";
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     lanzaboote = {
       url = "github:nix-community/lanzaboote/master";
       inputs.nixpkgs.follows = "nixpkgs";
