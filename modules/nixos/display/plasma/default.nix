@@ -1,4 +1,4 @@
-{ lib, config, ... }:
+{ lib, config, pkgs, ... }:
 let
   cfg = config.mods.display.plasma;
 in
@@ -17,6 +17,8 @@ in
     services.displayManager.defaultSession = lib.mkIf (cfg.defaultX11) "plasmax11";
     services.desktopManager.plasma6.enable = true;
     services.xserver.xkb.layout = "us";
+    services.xserver.excludePackages = [ pkgs.xterm ];
+    environment.plasma6.excludePackages = [ pkgs.kdePackages.konsole ];
     # enforce that plasma-manager runs after the portal is started, otherwise
     # themes will not be applied correctly
     systemd.user.services."app-plasma\\x2dmanager\\x2dautostart@autostart" = {
