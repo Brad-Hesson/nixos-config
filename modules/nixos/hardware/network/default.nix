@@ -47,7 +47,15 @@ in
       };
 
     # Allows incoming ssh connections
-    services.openssh.enable = true;
+    services.openssh = {
+      enable = true;
+      openFirewall = false;
+
+      settings = {
+        PermitRootLogin = "no";
+        PasswordAuthentication = true;
+      };
+    };
 
     # Persist network connection settings
     persistif.directories = [

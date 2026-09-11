@@ -15,4 +15,5 @@
     after = [ "network-online.target" ];
   };
   networking.networkmanager.dns = "systemd-resolved";
+  networking.firewall.interfaces."tailscale0".allowedTCPPorts = [ 22 ];
 }
