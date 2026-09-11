@@ -7,8 +7,8 @@ let cfg = config.mods.apps.steam; in {
     programs.steam.enable = true;
     programs.gamemode.enable = true;
 
-    mods.hardware.network.TCPPorts = [27036 27937];
-    mods.hardware.network.UDPPorts = [27031 27036];
+    mods.hardware.network.TCPPorts = [27036 27037];
+    mods.hardware.network.UDPPorts = [27031 27032 27033 27034 27035 27036];
 
     # Tell steam where to find ProtonGE
     environment.sessionVariables = {
