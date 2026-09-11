@@ -33,6 +33,10 @@
         enable = true;
       };
     };
+    tmux = {
+      enable = true;
+      mouse = true;
+    };
   };
 
   home.stateVersion = "24.05";
