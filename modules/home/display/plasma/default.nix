@@ -75,6 +75,14 @@ in
           file = ".config/plasmashellrc";
           method = "symlink";
         }
+        {
+          file = ".config/kactivitymanagerdrc";
+          method = "symlink";
+        }
+        {
+          file = ".local/state/kactivitymanagerdstaterc";
+          method = "symlink";
+        }
         ".local/share/user-places.xbel"
       ];
     };
