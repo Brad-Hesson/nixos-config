@@ -14,7 +14,7 @@
     builders-use-substitutes = true;
     # check the remote's cache for substitutes rather than rebuilding locally
     extra-substituters = [
-      "ssh-ng://bhesson@glacier?trusted=true&priority=10"
+      "ssh-ng://bhesson@glacier?trusted=true&priority=10&max-connections=8"
     ];
   };
 }
