@@ -13,6 +13,11 @@
     apps.steam.enable = true;
     bootSplash = { enable = true; theme = "bgrt"; };
     ios-drivers = { enable = true; };
+    plasmaDgpuStatus = {
+      enable = true;
+      pciAddress = "0000:02:00.0";
+      pollIntervalMs = 1000;
+    };
   };
 
   impermanence = {
