@@ -47,6 +47,10 @@
       url = "github:linux-surface/surface-dtx-daemon";
       flake = false;
     };
+    alacritty-themes = {
+      url = "github:alacritty/alacritty-theme";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.snowfall-lib.mkFlake {
