@@ -457,7 +457,8 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs",
         "plasma-manager": "plasma-manager",
-        "snowfall-lib": "snowfall-lib"
+        "snowfall-lib": "snowfall-lib",
+        "surface-dtx-daemon": "surface-dtx-daemon"
       }
     },
     "rust-analyzer-src": {
@@ -517,6 +518,22 @@
       "original": {
         "owner": "snowfallorg",
         "repo": "lib",
+        "type": "github"
+      }
+    },
+    "surface-dtx-daemon": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767059412,
+        "narHash": "sha256-5aSi5Z/oP+95wT4pQ778f6z2aVG/f6OT3/BvDELH+cU=",
+        "owner": "linux-surface",
+        "repo": "surface-dtx-daemon",
+        "rev": "ed4466356d9e63abe95b4937afbb0a8e99f9a698",
+        "type": "github"
+      },
+      "original": {
+        "owner": "linux-surface",
+        "repo": "surface-dtx-daemon",
         "type": "github"
       }
     },

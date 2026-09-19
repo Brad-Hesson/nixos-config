@@ -1,16 +1,16 @@
-{ lib, pkgs, ... }:
+{ lib, pkgs, inputs, ... }:
 
 let
   surfaceDtxDaemon = pkgs.rustPlatform.buildRustPackage {
     pname = "surface-dtx-daemon";
-    version = "0.3.11";
+    version = "unstable";
 
-    src = builtins.fetchGit {
-      url = "https://github.com/linux-surface/surface-dtx-daemon.git";
-      rev = "ed4466356d9e63abe95b4937afbb0a8e99f9a698";
+    src = inputs.surface-dtx-daemon;
+
+    cargoLock = {
+      lockFile = "${inputs.surface-dtx-daemon}/Cargo.lock";
+      allowBuiltinFetchGit = true;
     };
-
-    cargoHash = "sha256-5V9BY8ucAYvHZapmILI1JQDwDLlQDZW3GR2YEaySifA=";
 
     nativeBuildInputs = [
       pkgs.pkg-config

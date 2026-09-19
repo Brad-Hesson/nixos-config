@@ -43,6 +43,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+    surface-dtx-daemon = {
+      url = "github:linux-surface/surface-dtx-daemon";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.snowfall-lib.mkFlake {
