@@ -20,6 +20,7 @@
   environment.sessionVariables = {
     KWIN_DRM_DEVICES = "/dev/dri/intel-igpu";
     KWIN_RENDER_NODES = "";
+    KWIN_DISABLE_VULKAN = "1";
   };
 
   hardware.nvidia = {

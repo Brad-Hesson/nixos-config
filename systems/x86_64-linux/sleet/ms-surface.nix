@@ -1,7 +1,7 @@
 { inputs, pkgs, ... }: {
   imports = [
     inputs.nixos-hardware.nixosModules.microsoft-surface-common
-    # ./surface-dtx-daemon.nix
+    ./surface-dtx
   ];
 
   hardware.microsoft-surface.kernelVersion = "stable";
