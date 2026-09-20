@@ -12,7 +12,7 @@ let
     "--use-gl=angle"
     "--use-angle=vulkan"
     "--ozone-platform=wayland"
-    "--enable-features=EGLDualGPURendering,WaylandWindowDecorations"
+    "--enable-features=EGLDualGPURendering,WaylandWindowDecorations,UseDynamicBackingAllocations"
     "--enable-wayland-ime=true"
   ] ++ cfg.extraArgs;
 
@@ -24,7 +24,7 @@ let
 
   patchedBrowser = originalBrowser.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
-      echo "Applying Chromium Linux dual-GPU WebGL prototype patch"
+      echo "Applying Chromium Linux dual-GPU WebGL prototype v3 patch"
 
       ${pkgs.python3}/bin/python3 <<'PY'
       from pathlib import Path
@@ -242,9 +242,44 @@ let
       # Chromium M153 already has the WebGL semantics we want:
       #   default/low-power -> kLowPower
       #   high-performance  -> kHighPerformance
-      # so there is nothing to patch in Blink for the current NixOS 26.05 build.
+      #
+      # The remaining Linux problem is SharedImage routing. A high-performance
+      # WebGL DrawingBuffer is tagged with
+      # SHARED_IMAGE_USAGE_HIGH_PERFORMANCE_GPU, but CompoundImageBacking wraps
+      # the initially-created (default-GPU/Ozone) backing with ALL access
+      # streams, including kGL. That lets the NVIDIA GL context try to reuse the
+      # Intel/Ozone backing instead of asking DCSI for a GPU-local GL backing.
+      #
+      # Prototype fix: for a high-performance SharedImage, do not advertise the
+      # initial backing as a kGL backing. With UseDynamicBackingAllocations
+      # enabled, the first kGL access must then dynamically allocate a backing
+      # while the high-performance ANGLE/Vulkan context is current.
+      replace_once(
+          "gpu/command_buffer/service/shared_image/compound_image_backing.cc",
+          """  element.access_streams = AccessStreamSet::All();
 
-      print("dual-gpu patch: all prototype edits applied successfully")
+        // |backing| may have a cleared rect set""",
+          """  element.access_streams = AccessStreamSet::All();
+
+      #if BUILDFLAG(IS_LINUX)
+        if (usage().Has(SHARED_IMAGE_USAGE_HIGH_PERFORMANCE_GPU)) {
+          LOG(ERROR) << "DUALGPU: high-performance SharedImage: "
+                        "removing kGL from initial backing "
+                     << backing->GetName();
+          element.access_streams.Remove(SharedImageAccessStream::kGL);
+        }
+      #endif
+
+        // |backing| may have a cleared rect set""",
+          "force high-performance GL through a dynamically allocated backing",
+      )
+
+      # Keep this source patch deliberately minimal. The terminal log above
+      # confirms when a high-performance image has had kGL removed from its
+      # initial backing; subsequent Chromium errors tell us whether DCSI could
+      # allocate and initialize the replacement backing.
+
+      print("dual-gpu patch v3: all prototype edits applied successfully")
       PY
     '';
   });
@@ -254,7 +289,7 @@ let
   # browser executable.  Reuse the normal wrapper derivation but replace the
   # exact unwrapped browser/sandbox store paths in its generated buildCommand.
   patchedRuntime = baseChromium.overrideAttrs (old: {
-    pname = "chromium-dual-gpu-prototype-runtime";
+    pname = "chromium-dual-gpu-prototype-v3-runtime";
 
     buildCommand = builtins.replaceStrings
       [
@@ -276,7 +311,7 @@ let
     set -e
 
     profile_root="''${XDG_CONFIG_HOME:-$HOME/.config}"
-    profile="$profile_root/chromium-dual-gpu-prototype"
+    profile="$profile_root/chromium-dual-gpu-prototype-v3"
 
     exec ${patchedRuntime}/bin/chromium \
       --user-data-dir="$profile" \
@@ -402,7 +437,7 @@ let
 
   desktopItem = pkgs.makeDesktopItem {
     name = "chromium-dual-gpu";
-    desktopName = "Chromium (Dual GPU Prototype)";
+    desktopName = "Chromium (Dual GPU Prototype v3)";
     genericName = "Web Browser";
     comment = "Experimental per-WebGL-context Intel/NVIDIA GPU selection";
     exec = "chromium-dual-gpu %U";
@@ -417,7 +452,7 @@ let
   };
 
   package = pkgs.symlinkJoin {
-    name = "chromium-dual-gpu-prototype";
+    name = "chromium-dual-gpu-prototype-v3";
     paths = [
       launcher
       testLauncher
