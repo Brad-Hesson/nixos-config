@@ -24,7 +24,7 @@ let
 
   patchedBrowser = originalBrowser.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
-      echo "Applying Chromium Linux dual-GPU WebGL prototype v5 patch"
+      echo "Applying Chromium Linux dual-GPU WebGL prototype v5.1 patch"
 
       ${pkgs.python3}/bin/python3 <<'PY'
       from pathlib import Path
@@ -254,24 +254,17 @@ let
       # ANGLE displays necessarily have different share groups.
 
       # 4a. Extend AccessParams with the requesting GL share group.
+      # Include GLShareGroup directly. This is less brittle than matching the
+      # namespace-forward-declaration preamble, which differs across M153 point
+      # releases.
       replace_once(
           "gpu/command_buffer/service/shared_image/shared_image_backing.h",
-          """namespace gfx {
-      class D3DSharedFence;
-      class GpuFence;
-      }  // namespace gfx
-      namespace gpu {
+          """#include "ui/gfx/native_pixmap.h"
       """,
-          """namespace gfx {
-      class D3DSharedFence;
-      class GpuFence;
-      }  // namespace gfx
-      namespace gl {
-      class GLShareGroup;
-      }  // namespace gl
-      namespace gpu {
+          """#include "ui/gfx/native_pixmap.h"
+      #include "ui/gl/gl_share_group.h"
       """,
-          "forward-declare GLShareGroup for SharedImage AccessParams",
+          "include GLShareGroup for SharedImage AccessParams",
       )
 
       replace_once(
@@ -334,28 +327,35 @@ let
           "capture current GL share group when creating GL texture backing",
       )
 
-      replace_once(
+      replace_one_of(
           "gpu/command_buffer/service/shared_image/gl_texture_image_backing.cc",
-          """bool GLTextureImageBacking::SupportsAccess(SharedImageAccessStream stream,
-                                                 const AccessParams& params) const {
-        return CheckSupportForAccessStream(stream, params);
+          [
+              (
+                  """bool GLTextureImageBacking::SupportsAccess(
+          SharedImageAccessStream stream,
+          const AccessParams& params) const {
+        // `params.context_state` is not always available for all access streams. In
+        // such cases, we default to allowing access, assuming the context is
+        // compatible. When a context is provided, we explicitly check if it's a GL
+        // context to ensure correctness.
+        if (params.context_state) {
+          return params.context_state->GrContextIsGL();
+        }
+        return true;
       }
       """,
-          """bool GLTextureImageBacking::SupportsAccess(SharedImageAccessStream stream,
-                                                 const AccessParams& params) const {
-        if (!CheckSupportForAccessStream(stream, params)) {
+                  """bool GLTextureImageBacking::SupportsAccess(
+          SharedImageAccessStream stream,
+          const AccessParams& params) const {
+        if (params.context_state && !params.context_state->GrContextIsGL()) {
           return false;
         }
 
-        // If the caller supplied an explicit GL share group, require this
-        // backing's texture storage to be shareable with that group.
         if (params.gl_share_group && share_group_ &&
             params.gl_share_group != share_group_.get()) {
           return false;
         }
 
-        // Skia/Ganesh callers already carry SharedContextState. Apply the same
-        // share-group check there as well.
         if (params.context_state && params.context_state->GrContextIsGL() &&
             share_group_ &&
             params.context_state->share_group() != share_group_.get()) {
@@ -365,6 +365,35 @@ let
         return true;
       }
       """,
+              ),
+              (
+                  """bool GLTextureImageBacking::SupportsAccess(SharedImageAccessStream stream,
+                                                 const AccessParams& params) const {
+        return CheckSupportForAccessStream(stream, params);
+      }
+      """,
+                  """bool GLTextureImageBacking::SupportsAccess(SharedImageAccessStream stream,
+                                                 const AccessParams& params) const {
+        if (!CheckSupportForAccessStream(stream, params)) {
+          return false;
+        }
+
+        if (params.gl_share_group && share_group_ &&
+            params.gl_share_group != share_group_.get()) {
+          return false;
+        }
+
+        if (params.context_state && params.context_state->GrContextIsGL() &&
+            share_group_ &&
+            params.context_state->share_group() != share_group_.get()) {
+          return false;
+        }
+
+        return true;
+      }
+      """,
+              ),
+          ],
           "make GLTextureImageBacking access share-group aware",
       )
 
@@ -513,7 +542,7 @@ let
           "backport latest-content GPU backing selection fix",
       )
 
-      print("dual-gpu patch v5: all prototype edits applied successfully")
+      print("dual-gpu patch v5.1: all prototype edits applied successfully")
       PY
     '';
   });
@@ -523,7 +552,7 @@ let
   # browser executable.  Reuse the normal wrapper derivation but replace the
   # exact unwrapped browser/sandbox store paths in its generated buildCommand.
   patchedRuntime = baseChromium.overrideAttrs (old: {
-    pname = "chromium-dual-gpu-prototype-v5-runtime";
+    pname = "chromium-dual-gpu-prototype-v5_1_1-runtime";
 
     buildCommand = builtins.replaceStrings
       [
@@ -545,7 +574,7 @@ let
     set -e
 
     profile_root="''${XDG_CONFIG_HOME:-$HOME/.config}"
-    profile="$profile_root/chromium-dual-gpu-prototype-v5"
+    profile="$profile_root/chromium-dual-gpu-prototype-v5_1"
 
     exec ${patchedRuntime}/bin/chromium \
       --user-data-dir="$profile" \
@@ -671,7 +700,7 @@ let
 
   desktopItem = pkgs.makeDesktopItem {
     name = "chromium-dual-gpu";
-    desktopName = "Chromium (Dual GPU Prototype v5)";
+    desktopName = "Chromium (Dual GPU Prototype v5.1)";
     genericName = "Web Browser";
     comment = "Experimental per-WebGL-context Intel/NVIDIA GPU selection";
     exec = "chromium-dual-gpu %U";
@@ -686,7 +715,7 @@ let
   };
 
   package = pkgs.symlinkJoin {
-    name = "chromium-dual-gpu-prototype-v5";
+    name = "chromium-dual-gpu-prototype-v5_1";
     paths = [
       launcher
       testLauncher
