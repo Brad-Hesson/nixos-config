@@ -5,7 +5,13 @@
   ];
 
   hardware.microsoft-surface.kernelVersion = "stable";
-  services.iptsd.enable = true;
+  services.iptsd = {
+    enable = true;
+    config = {
+      Touchscreen.DisableOnPalm = true;
+      Touchscreen.DisableOnStylus = true;
+    };
+  };
   environment.systemPackages = [
     pkgs.surface-control
   ];
