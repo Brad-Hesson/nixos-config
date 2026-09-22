@@ -24,7 +24,7 @@ let
 
   patchedBrowser = originalBrowser.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
-      echo "Applying Chromium Linux dual-GPU WebGL prototype v5.1 patch"
+      echo "Applying Chromium Linux dual-GPU WebGL prototype v4.1 patch"
 
       ${pkgs.python3}/bin/python3 <<'PY'
       from pathlib import Path
@@ -243,233 +243,45 @@ let
       #   default/low-power -> kLowPower
       #   high-performance  -> kHighPerformance
       #
-      # v3 proved the multi-GPU path works, but its blanket removal of kGL from
-      # every HIGH_PERFORMANCE_GPU backing is too coarse for real applications
-      # like Onshape.  M153 already has DCSI's AccessParams/SupportsAccess
-      # infrastructure; extend it with the actual GL share-group identity so a
-      # GLTextureImageBacking is reused only by a compatible GL context.
+      # The remaining Linux problem is SharedImage routing. A high-performance
+      # WebGL DrawingBuffer is tagged with
+      # SHARED_IMAGE_USAGE_HIGH_PERFORMANCE_GPU, but CompoundImageBacking wraps
+      # the initially-created (default-GPU/Ozone) backing with ALL access
+      # streams, including kGL. That lets the NVIDIA GL context try to reuse the
+      # Intel/Ozone backing instead of asking DCSI for a GPU-local GL backing.
       #
-      # This follows Chromium's own GLContext compatibility model:
-      # contexts in the same GLShareGroup can reuse textures; Intel and NVIDIA
-      # ANGLE displays necessarily have different share groups.
-
-      # 4a. Extend AccessParams with the requesting GL share group.
-      # Include GLShareGroup directly. This is less brittle than matching the
-      # namespace-forward-declaration preamble, which differs across M153 point
-      # releases.
-      replace_once(
-          "gpu/command_buffer/service/shared_image/shared_image_backing.h",
-          """#include "ui/gfx/native_pixmap.h"
-      """,
-          """#include "ui/gfx/native_pixmap.h"
-      #include "ui/gl/gl_share_group.h"
-      """,
-          "include GLShareGroup for SharedImage AccessParams",
-      )
-
-      replace_once(
-          "gpu/command_buffer/service/shared_image/shared_image_backing.h",
-          """  scoped_refptr<SharedContextState> context_state = nullptr;
-        wgpu::Device wgpu_device = nullptr;
-        // Other context types can be added here in the future.
-      """,
-          """  scoped_refptr<SharedContextState> context_state = nullptr;
-        wgpu::Device wgpu_device = nullptr;
-        // GL accesses do not currently carry a SharedContextState. Keep the
-        // actual GL share-group identity so CompoundImageBacking can distinguish
-        // Intel and NVIDIA GL/ANGLE contexts.
-        raw_ptr<gl::GLShareGroup> gl_share_group = nullptr;
-        // Other context types can be added here in the future.
-      """,
-          "add GL share-group identity to SharedImage AccessParams",
-      )
-
-      # 4b. Store the GL share group that actually created each GL texture
-      # backing. Dynamic allocations occur while the requesting GL context is
-      # current, so a newly-created NVIDIA backing records the NVIDIA group.
-      replace_once(
-          "gpu/command_buffer/service/shared_image/gl_texture_image_backing.h",
-          """#include "gpu/command_buffer/service/shared_image/gl_texture_holder.h"
-
-      class GrPromiseImageTexture;
-      """,
-          """#include "gpu/command_buffer/service/shared_image/gl_texture_holder.h"
-      #include "ui/gl/gl_share_group.h"
-
-      class GrPromiseImageTexture;
-      """,
-          "include GLShareGroup for GLTextureImageBacking ownership",
-      )
-
-      replace_once(
-          "gpu/command_buffer/service/shared_image/gl_texture_image_backing.h",
-          """  const bool is_passthrough_;
-
-        std::vector<scoped_refptr<GLTextureHolder>> textures_;
-      """,
-          """  const bool is_passthrough_;
-        scoped_refptr<gl::GLShareGroup> share_group_;
-
-        std::vector<scoped_refptr<GLTextureHolder>> textures_;
-      """,
-          "store creating GL share group on GLTextureImageBacking",
-      )
-
-      replace_once(
-          "gpu/command_buffer/service/shared_image/gl_texture_image_backing.cc",
-          """      is_passthrough_(is_passthrough) {
-      """,
-          """      is_passthrough_(is_passthrough),
-            share_group_(gl::GLContext::GetCurrent()
-                             ? gl::GLContext::GetCurrent()->share_group()
-                             : nullptr) {
-      """,
-          "capture current GL share group when creating GL texture backing",
-      )
-
-      replace_one_of(
-          "gpu/command_buffer/service/shared_image/gl_texture_image_backing.cc",
-          [
-              (
-                  """bool GLTextureImageBacking::SupportsAccess(
-          SharedImageAccessStream stream,
-          const AccessParams& params) const {
-        // `params.context_state` is not always available for all access streams. In
-        // such cases, we default to allowing access, assuming the context is
-        // compatible. When a context is provided, we explicitly check if it's a GL
-        // context to ensure correctness.
-        if (params.context_state) {
-          return params.context_state->GrContextIsGL();
-        }
-        return true;
-      }
-      """,
-                  """bool GLTextureImageBacking::SupportsAccess(
-          SharedImageAccessStream stream,
-          const AccessParams& params) const {
-        if (params.context_state && !params.context_state->GrContextIsGL()) {
-          return false;
-        }
-
-        if (params.gl_share_group && share_group_ &&
-            params.gl_share_group != share_group_.get()) {
-          return false;
-        }
-
-        if (params.context_state && params.context_state->GrContextIsGL() &&
-            share_group_ &&
-            params.context_state->share_group() != share_group_.get()) {
-          return false;
-        }
-
-        return true;
-      }
-      """,
-              ),
-              (
-                  """bool GLTextureImageBacking::SupportsAccess(SharedImageAccessStream stream,
-                                                 const AccessParams& params) const {
-        return CheckSupportForAccessStream(stream, params);
-      }
-      """,
-                  """bool GLTextureImageBacking::SupportsAccess(SharedImageAccessStream stream,
-                                                 const AccessParams& params) const {
-        if (!CheckSupportForAccessStream(stream, params)) {
-          return false;
-        }
-
-        if (params.gl_share_group && share_group_ &&
-            params.gl_share_group != share_group_.get()) {
-          return false;
-        }
-
-        if (params.context_state && params.context_state->GrContextIsGL() &&
-            share_group_ &&
-            params.context_state->share_group() != share_group_.get()) {
-          return false;
-        }
-
-        return true;
-      }
-      """,
-              ),
-          ],
-          "make GLTextureImageBacking access share-group aware",
-      )
-
-      # 4c. CompoundImageBacking currently passes empty AccessParams for GL,
-      # despite an explicit source comment saying GL context information may be
-      # needed when one backing is used from another context. Pass the current
-      # GL share group for both legacy and passthrough GL representations.
+      # Prototype fix: for a high-performance SharedImage, do not advertise the
+      # initial backing as a kGL backing. With UseDynamicBackingAllocations
+      # enabled, the first kGL access must then dynamically allocate a backing
+      # while the high-performance ANGLE/Vulkan context is current.
       replace_once(
           "gpu/command_buffer/service/shared_image/compound_image_backing.cc",
-          """#include "ui/gfx/gpu_memory_buffer_handle.h"
-      """,
-          """#include "ui/gfx/gpu_memory_buffer_handle.h"
-      #include "ui/gl/gl_context.h"
-      """,
-          "include GLContext for current share-group lookup",
-      )
+          """  element.access_streams = AccessStreamSet::All();
 
-      replace_once(
-          "gpu/command_buffer/service/shared_image/compound_image_backing.cc",
-          """std::unique_ptr<GLTextureImageRepresentation>
-      CompoundImageBacking::ProduceGLTexture(SharedImageManager* manager,
-                                             MemoryTypeTracker* tracker) {
-        // For GLTextureImageRepresentation, the SharedImageAccessStream::kGL is
-        // specific enough for backing selection. While AccessParams could be extended
-        // in the future to include GL context information for stricter correctness
-        // checks (e.g., ensuring a backing created on one GL context isn't used on
-        // another, unless it's an EglImageBacking), it is not currently needed.
-        std::unique_ptr<SharedImageBacking> transient_backing;
-        auto* backing = GetOrAllocateBacking(SharedImageAccessStream::kGL,
-                                             AccessParams(), transient_backing);
-      """,
-          """std::unique_ptr<GLTextureImageRepresentation>
-      CompoundImageBacking::ProduceGLTexture(SharedImageManager* manager,
-                                             MemoryTypeTracker* tracker) {
-        AccessParams access_params;
-        if (auto* current_context = gl::GLContext::GetCurrent()) {
-          access_params.gl_share_group = current_context->share_group();
+        // |backing| may have a cleared rect set""",
+          """  element.access_streams = AccessStreamSet::All();
+
+      #if BUILDFLAG(IS_LINUX)
+        if (usage().Has(SHARED_IMAGE_USAGE_HIGH_PERFORMANCE_GPU)) {
+          LOG(ERROR) << "DUALGPU: high-performance SharedImage: "
+                        "removing kGL from initial backing "
+                     << backing->GetName();
+          element.access_streams.Remove(SharedImageAccessStream::kGL);
         }
-        std::unique_ptr<SharedImageBacking> transient_backing;
-        auto* backing = GetOrAllocateBacking(SharedImageAccessStream::kGL,
-                                             access_params, transient_backing);
-      """,
-          "make GLTexture compound-backing selection context aware",
+      #endif
+
+        // |backing| may have a cleared rect set""",
+          "force high-performance GL through a dynamically allocated backing",
       )
 
-      replace_once(
-          "gpu/command_buffer/service/shared_image/compound_image_backing.cc",
-          """std::unique_ptr<GLTexturePassthroughImageRepresentation>
-      CompoundImageBacking::ProduceGLTexturePassthrough(SharedImageManager* manager,
-                                                        MemoryTypeTracker* tracker) {
-        // For GLTexturePassthroughImageRepresentation, the
-        // SharedImageAccessStream::kGL is specific enough for backing selection.
-        // While AccessParams could be extended in the future to include GL context
-        // information for stricter correctness checks, it is not currently needed.
-        std::unique_ptr<SharedImageBacking> transient_backing;
-        auto* backing = GetOrAllocateBacking(SharedImageAccessStream::kGL,
-                                             AccessParams(), transient_backing);
-      """,
-          """std::unique_ptr<GLTexturePassthroughImageRepresentation>
-      CompoundImageBacking::ProduceGLTexturePassthrough(SharedImageManager* manager,
-                                                        MemoryTypeTracker* tracker) {
-        AccessParams access_params;
-        if (auto* current_context = gl::GLContext::GetCurrent()) {
-          access_params.gl_share_group = current_context->share_group();
-        }
-        std::unique_ptr<SharedImageBacking> transient_backing;
-        auto* backing = GetOrAllocateBacking(SharedImageAccessStream::kGL,
-                                             access_params, transient_backing);
-      """,
-          "make passthrough GL compound-backing selection context aware",
-      )
+      # Keep v3's known-good GL routing unchanged.
+      #
+      # Backport upstream Chromium commit
+      # f1ca08ec7e806878ea916776bc3114b438333efe (2026-09-17):
+      # when DCSI has multiple GPU backings, readback must select the backing
+      # that actually owns latest_content_id_, rather than simply the first
+      # non-memory backing.
 
-      # 5. Backport Chromium upstream commit f1ca08ec7e806878ea916776bc3114b438333efe
-      # (2026-09-17). This is directly relevant once there can be multiple GPU
-      # elements: readback must select the element holding latest_content_id_,
-      # not merely the first non-memory element.
       replace_once(
           "gpu/command_buffer/service/shared_image/compound_image_backing.cc",
           """  auto* gpu_backing = GetGpuBacking();
@@ -492,7 +304,7 @@ let
           return false;
         }
       """,
-          "backport latest-content synchronous readback fix",
+          "backport upstream latest-content synchronous readback fix",
       )
 
       replace_once(
@@ -513,7 +325,7 @@ let
           return;
         }
       """,
-          "backport latest-content asynchronous readback null guard",
+          "backport upstream latest-content asynchronous readback null guard",
       )
 
       replace_once(
@@ -539,10 +351,10 @@ let
         return nullptr;
       }
       """,
-          "backport latest-content GPU backing selection fix",
+          "backport upstream latest-content GPU backing selection fix",
       )
 
-      print("dual-gpu patch v5.1: all prototype edits applied successfully")
+      print("dual-gpu patch v4.1: all prototype edits applied successfully")
       PY
     '';
   });
@@ -552,7 +364,7 @@ let
   # browser executable.  Reuse the normal wrapper derivation but replace the
   # exact unwrapped browser/sandbox store paths in its generated buildCommand.
   patchedRuntime = baseChromium.overrideAttrs (old: {
-    pname = "chromium-dual-gpu-prototype-v5_1_1-runtime";
+    pname = "chromium-dual-gpu-prototype-v4_1-runtime";
 
     buildCommand = builtins.replaceStrings
       [
@@ -574,7 +386,7 @@ let
     set -e
 
     profile_root="''${XDG_CONFIG_HOME:-$HOME/.config}"
-    profile="$profile_root/chromium-dual-gpu-prototype-v5_1"
+    profile="$profile_root/chromium-dual-gpu-prototype-v4_1"
 
     exec ${patchedRuntime}/bin/chromium \
       --user-data-dir="$profile" \
@@ -700,7 +512,7 @@ let
 
   desktopItem = pkgs.makeDesktopItem {
     name = "chromium-dual-gpu";
-    desktopName = "Chromium (Dual GPU Prototype v5.1)";
+    desktopName = "Chromium (Dual GPU Prototype v4.1)";
     genericName = "Web Browser";
     comment = "Experimental per-WebGL-context Intel/NVIDIA GPU selection";
     exec = "chromium-dual-gpu %U";
@@ -715,7 +527,7 @@ let
   };
 
   package = pkgs.symlinkJoin {
-    name = "chromium-dual-gpu-prototype-v5_1";
+    name = "chromium-dual-gpu-prototype-v4_1";
     paths = [
       launcher
       testLauncher
