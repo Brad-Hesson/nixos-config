@@ -23,6 +23,8 @@ let
   originalBrowser = baseChromium.browser;
 
   patchedBrowser = originalBrowser.overrideAttrs (old: {
+    NIXBUILDNET_MIN_CPU = "16";
+    NIXBUILDNET_MAX_CPU = "32";
     postPatch = (old.postPatch or "") + ''
       echo "Applying Chromium Linux dual-GPU WebGL prototype v4.1 patch"
 
