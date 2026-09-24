@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 
-# Home Manager module — v6i, Chromium 153.0.8010.47 / Vulkan loader 1.4.357.0.
+# Home Manager module — v6j, Chromium 153.0.8010.47 / Vulkan loader 1.4.357.0.
 # Preserve v4.1 DCSI/latest-content changes. Add handle-scoped Vulkan dispatch,
 # exclusive runtime-resolved drivers, lazy NVIDIA teardown, and runtime controls.
 # No full Chromium compile or Surface Book hardware validation was possible here.
@@ -1117,7 +1117,7 @@ let
       R=A+'src/libANGLE/renderer/vulkan/vk_renderer.cpp'
       H=A+'src/libANGLE/renderer/vulkan/vk_renderer.h'
       prepend(H, '#include <set>\n')
-      prepend(R, ''''#if defined(ANGLE_PLATFORM_LINUX) && !defined(ANGLE_PLATFORM_ANDROID)
+      prepend(R, ''''#if defined(__linux__)
       #include <dirent.h>
       #include <dlfcn.h>
       #include <limits.h>
