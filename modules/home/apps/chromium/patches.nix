@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 
-# Home Manager module — v6j, Chromium 153.0.8010.47 / Vulkan loader 1.4.357.0.
+# Home Manager module — v6k, Chromium 153.0.8010.47 / Vulkan loader 1.4.357.0.
 # Preserve v4.1 DCSI/latest-content changes. Add handle-scoped Vulkan dispatch,
 # exclusive runtime-resolved drivers, lazy NVIDIA teardown, and runtime controls.
 # No full Chromium compile or Surface Book hardware validation was possible here.
@@ -566,6 +566,45 @@ let
   patchedBrowser = assert lib.assertMsg (originalBrowser.version == "153.0.8010.47")
     "dual-GPU v6b targets Chromium 153.0.8010.47; review patches before changing this guard";
     originalBrowser.overrideAttrs (old: {
+    preBuild = (old.preBuild or "") + ''
+      ${pkgs.python3}/bin/python3 <<'PY'
+      """Build patched C++ objects first, using the actual generated Ninja graph."""
+      from pathlib import Path
+      import os
+      import subprocess
+
+      candidates = [Path('.'), Path('out/Release'), Path('out/Default')]
+      builds = [p for p in candidates if (p / 'build.ninja').is_file()]
+      if len(builds) != 1:
+          raise SystemExit('DUALGPU: cannot uniquely locate generated build.ninja; stopping')
+      build = builds[0]
+      targets = subprocess.check_output(['ninja', '-C', str(build), '-t', 'targets', 'all'], text=True)
+      stems = {
+          'gl_factory', 'gl_display', 'gl_display_manager', 'gl_context_egl',
+          'gl_switches', 'gl_share_group', 'gpu_init', 'gpu_channel_manager',
+          'gles2_command_buffer_stub', 'gpu_pre_sandbox_hook_linux',
+          'vk_renderer', 'vk_utils', 'dual_gpu_volk', 'libvulkan_loader',
+          'Display', 'validationEGL', 'compound_image_backing',
+          'gl_texture_image_backing',
+      }
+      selected = []
+      found = set()
+      for line in targets.splitlines():
+          target = line.rsplit(': ', 1)[0]
+          path = Path(target)
+          if path.suffix == '.o' and path.stem in stems:
+              selected.append(target)
+              found.add(path.stem)
+      missing = stems - found
+      if missing:
+          raise SystemExit(f'DUALGPU: patched object targets missing: {sorted(missing)}')
+      print(f'DUALGPU: compiling {len(selected)} patched objects before the full browser', flush=True)
+      subprocess.run(['ninja', '-C', str(build), '-j', os.environ.get('NIX_BUILD_CORES', '2'),
+                      *sorted(set(selected))], check=True)
+      print('DUALGPU: patched-object compile gate passed', flush=True)
+      PY
+    '';
+
     postPatch = (old.postPatch or "") + ''
       echo "Applying Chromium Linux dual-GPU WebGL prototype v6b patch"
 
@@ -1125,6 +1164,7 @@ let
       #include <unistd.h>
       #include <cerrno>
       #include <cstdio>
+      #include <cstdlib>
       #include <cstring>
       #include <fstream>
       #include <set>
@@ -1409,7 +1449,7 @@ let
       static std::set<int> DualGpuNvidiaFdSnapshot() {
         std::set<int> result;
         DIR* directory = opendir("/proc/self/fd");
-        if (!directory) return result;
+        if (!directory) return {-1}; // Inspection failure is not an empty FD set.
         while (dirent* entry = readdir(directory)) {
           char* end = nullptr; long fd = std::strtol(entry->d_name, &end, 10);
           if (!end || *end || fd < 0) continue;
@@ -1421,18 +1461,24 @@ let
       }
       static std::set<std::string> DualGpuNvidiaMappings() {
         std::set<std::string> result; std::ifstream maps("/proc/self/maps"); std::string line;
+        if (!maps.is_open()) return {"INSPECTION_FAILED"};
         while (std::getline(maps, line)) {
           if (line.find("/nvidia-x11-") == std::string::npos && line.find("/libnvidia") == std::string::npos) continue;
           size_t path = line.find('/'); if (path != std::string::npos) result.insert(line.substr(path));
         }
+        if (maps.bad()) return {"INSPECTION_FAILED"};
         return result;
       }
       static bool ReleaseDualGpuNvidiaDriver(const std::set<int>& baseline) {
+        if (!baseline.empty()) return false; // Do not take over a pre-existing NVIDIA client.
+        if (DualGpuNvidiaFdSnapshot().contains(-1)) return false;
         auto mappings = DualGpuNvidiaMappings();
         if (mappings.size() != 1 || mappings.begin()->find("/libnvidia-allocator.so.") == std::string::npos) return false;
         void* allocator = dlopen(mappings.begin()->c_str(), RTLD_NOW | RTLD_NOLOAD | RTLD_LOCAL);
         if (!allocator || dlclose(allocator) != 0 || dlclose(allocator) != 0 || !DualGpuNvidiaMappings().empty()) return false;
-        for (int fd : DualGpuNvidiaFdSnapshot()) if (!baseline.contains(fd) && close(fd) != 0) return false;
+        const auto remaining = DualGpuNvidiaFdSnapshot();
+        if (remaining.contains(-1)) return false;
+        for (int fd : remaining) if (!baseline.contains(fd) && close(fd) != 0) return false;
         return DualGpuNvidiaFdSnapshot() == baseline;
       }
       #endif
@@ -1458,7 +1504,7 @@ let
       #if BUILDFLAG(IS_LINUX)
           if (gpu_preference == gl::GpuPreference::kHighPerformance &&
               GetANGLEImplementation() == ANGLEImplementation::kVulkan &&
-              SupportsEGLDualGPURendering()) {
+              features::SupportsEGLDualGPURendering()) {
             // Retain the preference mapping for a later retry (e.g. DTX reattach).
             // Do not silently satisfy an explicit high-power request with Intel.
             LOG(ERROR) << "DUALGPU: high-performance display initialization failed; mapping retained";
@@ -1471,7 +1517,7 @@ let
       #if BUILDFLAG(IS_LINUX)
           if (gpu_preference == gl::GpuPreference::kHighPerformance && display &&
               GetANGLEImplementation() == ANGLEImplementation::kVulkan &&
-              SupportsEGLDualGPURendering()) {
+              features::SupportsEGLDualGPURendering()) {
             display->Shutdown();
             return nullptr;
           }
