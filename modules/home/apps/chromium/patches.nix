@@ -1,139 +1,8 @@
-# v6b installation and testing (all code is self-contained below)
-#
-# Replace the entire previous module with this file, keeping your existing import
-# and programs.chromiumDualGpuPrototype.enable = true. Skip v6a. This is a candidate
-# implementation, not a confirmed Chromium/Surface Book build. It targets exactly
-# Chromium 153.0.8010.47 and vulkan-loader 1.4.357.0; version guards fail early.
-#
-# Local validation completed:
-# - All source replacements applied to the exact upstream Chromium/ANGLE revisions.
-# - Generated 761 Vulkan dispatch wrappers compiled against that checkout's headers.
-# - Mock test passed 4,000,000 calls on four threads/two devices and 50 key-reuse cycles.
-# - Patched Vulkan loader compiled (local test build had WSI disabled).
-# - Discovery resolved fixture manifests without executing aborting ICD constructors.
-# - Preflight C++ compiled; actual GPU tests require your machine.
-# - Nix syntax and embedded test-page JavaScript parsed.
-# Nix evaluation, full Chromium compilation, sandboxed driver loading and actual
-# Intel/NVIDIA/Onshape/DTX behavior have NOT been validated here.
-#
-# 1. Build ONLY the inexpensive preflight first. Run from your flake directory;
-#    substitute your actual NixOS host and Home Manager user attribute names:
-#
-#    host=YOUR_HOST
-#    hm_user=YOUR_USERNAME
-#    attr=".#nixosConfigurations.$host.config.home-manager.users.$hm_user.programs.chromiumDualGpuPrototype"
-#    nix build "$attr.preflightPackage" -o result-dualgpu-preflight
-#    ./result-dualgpu-preflight/bin/dual-gpu-preflight 2>&1 | tee v6b-preflight.log
-#
-#    Standalone Home Manager equivalent:
-#    attr='.#homeConfigurations.YOUR_CONFIGURATION.config.programs.chromiumDualGpuPrototype'
-#
-#    Run attached to the base, on AC. Preflight intentionally wakes NVIDIA. Require
-#    PASS at the end, both correct vendors, and zero NVIDIA FDs after each teardown.
-#    A failure means STOP before compiling Chromium and send the complete log.
-#    --metadata-only performs discovery without loading either ICD.
-#    Preflight tests this process, not device handles held by unrelated applications.
-#    It cannot validate Chromium's sandbox or actual WebGL rendering.
-#
-# 2. After preflight passes, build Chromium once:
-#
-#    nix build "$attr.finalPackage" -o result-dualgpu
-#
-#    You can run this result directly; a full system switch is not required to test.
-#    If compilation fails, send the FIRST compiler error and surrounding lines.
-#    Do not remove version or exact-match guards to work around an error.
-#
-# 3. Close other Chromium instances to make FD accounting unambiguous. Start X11
-#    first on AC, using a fresh test profile and preserving logs:
-#
-#    ./result-dualgpu/bin/chromium-dual-gpu-test \
-#      --ozone-platform=x11 --user-data-dir="$HOME/.cache/dual-gpu-v6b-x11" \
-#      --enable-logging=stderr --v=1 2>&1 | tee v6b-x11.log
-#
-#    Use a previously unused profile path for the first run. All launcher arguments
-#    now reach Chromium. Never reuse a running browser process for a different mode;
-#    Chromium may forward to that process and ignore new environment/flags.
-#
-# 4. In another terminal, run at startup, while high contexts exist, and 10 seconds
-#    after removing all high contexts:
-#
-#    ./result-dualgpu/bin/chromium-dual-gpu-state
-#
-#    If it reports inaccessible FD entries, rerun the exact helper with sudo:
-#    sudo ./result-dualgpu/bin/chromium-dual-gpu-state
-#    It respects SUDO_UID. The helper reads proc/sysfs and does not run nvidia-smi.
-#    It includes all same-user Chrome/Chromium processes, including sandbox brokers.
-#    Zero in this helper is not proof that unrelated applications have no handles.
-#
-# 5. Acceptance sequence in the test page:
-#    a. Only default/low-power frames initially: both Intel; zero NVIDIA device FDs.
-#    b. Add two high frames: NVIDIA renderer in both; all four frames animate.
-#       GPU process PID stays stable; no context loss, GL/readback errors or SIGSEGV.
-#    c. Remove all high frames, keeping Intel frames alive. After cleanup + idle
-#       grace, logs show 'terminating idle NVIDIA EGL display' and 'renderer and
-#       direct ICD reference released'; NVIDIA FD count returns to zero.
-#    d. Run ten cycles. Require the same PID, correct vendors and teardown each time.
-#    e. With high frames removed, exercise DTX detach and reattach, then add high
-#       frames again. Start the browser attached: discovering hardware first added
-#       after a detached startup is not implemented by the retained PCI mapping.
-#
-#    Idle teardown waits for ALL ANGLE contexts, surfaces, images, syncs and streams.
-#    A remaining live-object mask is a failed zero-FD acceptance test, even if the
-#    device is suspended. The implementation retains live objects rather than
-#    invalidating references. Record the mask; it identifies what blocks teardown.
-#
-# 6. Onshape: in the same run, open your model, verify NVIDIA renderer, and orbit,
-#    pan, zoom, change views and interact for several minutes with Intel test frames
-#    still animating. Close the Onshape tab and all high test frames; repeat the
-#    10-second FD check. Compare ordinary pages/video scrolling for regressions.
-#
-# 7. Repeat with --ozone-platform=wayland and a different profile. Only after X11
-#    and Wayland pass on AC, repeat on battery. Record AC/battery and DTX state.
-#
-# Runtime controls (restart browser; these do NOT require recompiling):
-#    CHROMIUM_DUAL_GPU_MODE=dual     default: low/default Intel, explicit high NVIDIA
-#    CHROMIUM_DUAL_GPU_MODE=intel    all WebGL preferences on Intel
-#    CHROMIUM_DUAL_GPU_MODE=nvidia   all preferences on NVIDIA; idle trim disabled
-#    CHROMIUM_DUAL_GPU_TRIM=0        keep displays alive to isolate teardown failures
-#    CHROMIUM_DUAL_GPU_IDLE_SECONDS=10  choose a grace of 1..60 seconds (default 3)
-#    CHROMIUM_DUAL_GPU_ISOLATION=0   diagnostic conventional multi-ICD discovery
-#
-# Example single-GPU control, after fully exiting the previous prototype:
-#    CHROMIUM_DUAL_GPU_MODE=intel ./result-dualgpu/bin/chromium-dual-gpu-test \
-#      --ozone-platform=x11 --user-data-dir="$HOME/.cache/dual-gpu-v6b-intel" \
-#      --enable-logging=stderr 2>&1 | tee v6b-intel.log
-# Repeat with MODE=nvidia and another profile if dual mode fails. Isolation=0 still
-# uses the new handle-scoped dispatch; it is NOT a return to the old unsafe dispatch.
-# No zero-NVIDIA-idle expectation applies to NVIDIA-only, isolation=0 or trim=0.
-#
-# Scope and retained behavior:
-# - v4.1 DCSI workaround and latest-content fixes retained; no v5 share-group edits.
-# - Per-instance/device dispatch, exclusive single-ICD instances, lazy unloadable
-#   NVIDIA references, safe idle teardown and retry-preserving mappings included.
-# - Drivers are resolved inside the loader using its canonical manifest discovery;
-#   no Nix ICD paths or VK_DRIVER_FILES/VK_ICD_FILENAMES are injected. The generic
-#   patched Vulkan loader is a normal runtime dependency independent of Chromium.
-# - This Intel/proprietary-NVIDIA prototype recognizes the existing Intel/NVIDIA
-#   ICD library names in manifests. Missing, ambiguous or bare-SONAME-only manifest
-#   paths fail closed. Actual Vulkan vendor/device identity is checked afterward.
-# - Implicit layers and inherited driver override/offload variables are cleared.
-#   Explicit validation/API-dump layers are not supported in isolated mode.
-# - Independent Chromium Vulkan compositor/WebGPU clients are disabled for these
-#   tests; rendering stays on ANGLE/Vulkan. This iteration does not isolate Dawn.
-# - Runtime library directories get read-only GPU broker permissions for lazy
-#   loading. The GPU sandbox itself remains enabled.
-#
-# If anything fails, send: preflight log, build's first error OR full browser log,
-# FD snapshots at the three stages, GPU PID before/after, test-page output, selected
-# runtime controls, backend, power state, and the crash dump if there was a crash.
-# Useful log filter: rg 'DUALGPU|ERROR|SIGSEGV|context lost' v6b-x11.log
-
 { config, lib, pkgs, ... }:
 
-# Home Manager module — v6b, Chromium 153.0.8010.47 / Vulkan loader 1.4.357.0.
+# Home Manager module — v6i, Chromium 153.0.8010.47 / Vulkan loader 1.4.357.0.
 # Preserve v4.1 DCSI/latest-content changes. Add handle-scoped Vulkan dispatch,
 # exclusive runtime-resolved drivers, lazy NVIDIA teardown, and runtime controls.
-# Build preflightPackage first; see the accompanying testing instructions.
 # No full Chromium compile or Surface Book hardware validation was possible here.
 
 let
@@ -215,126 +84,453 @@ let
     });
 
   preflightSource = pkgs.writeText "dual-gpu-preflight.cpp" ''
+    #ifndef _GNU_SOURCE
+    #define _GNU_SOURCE
+    #endif
     #define VK_NO_PROTOTYPES
     #include <vulkan/vulkan.h>
+
     #include <dlfcn.h>
+    #include <link.h>
+    #include <unistd.h>
+
     #include <cstdio>
+    #include <cerrno>
     #include <cstdlib>
     #include <cstring>
-    #include <vector>
     #include <filesystem>
+    #include <set>
     #include <string>
-    #include <thread>
-    static void require(bool condition, const char* what) {
-        if (!condition) { std::fprintf(stderr, "FAIL: %s\n", what); std::exit(1); }
+    #include <vector>
+
+    [[noreturn]] static void fail(const char* message) {
+        std::fprintf(stderr, "FAIL: %s\n", message);
+        std::exit(1);
     }
-    static int nvidiaFDs(const char* stage) {
-        int count = 0;
+    static void require(bool condition, const char* message) {
+        if (!condition) fail(message);
+    }
+
+    struct NvidiaFd {
+        int number;
+        std::string target;
+    };
+
+    static std::vector<NvidiaFd> findNvidiaFDs() {
+        std::vector<NvidiaFd> result;
         for (const auto& entry : std::filesystem::directory_iterator("/proc/self/fd")) {
             std::error_code error;
-            std::string target = std::filesystem::read_symlink(entry.path(), error).string();
+            const std::string target = std::filesystem::read_symlink(entry.path(), error).string();
             bool nvidia = target.rfind("/dev/nvidia", 0) == 0;
             if (target.rfind("/dev/dri/", 0) == 0) {
-                std::string name = std::filesystem::path(target).filename().string();
-                std::string path = "/sys/class/drm/" + name + "/device/vendor";
-                FILE* f = std::fopen(path.c_str(), "r");
-                unsigned vendor = 0;
-                if (f) { if (std::fscanf(f, "%x", &vendor) == 1) nvidia = vendor == 0x10de; std::fclose(f); }
+                const std::string node = std::filesystem::path(target).filename().string();
+                const std::string vendor_path = "/sys/class/drm/" + node + "/device/vendor";
+                if (FILE* vendor = std::fopen(vendor_path.c_str(), "r")) {
+                    unsigned id = 0;
+                    nvidia = std::fscanf(vendor, "%x", &id) == 1 && id == 0x10de;
+                    std::fclose(vendor);
+                }
             }
-            if (nvidia) { ++count; std::printf("  NVIDIA FD %s -> %s\n", entry.path().filename().c_str(), target.c_str()); }
+            if (nvidia) {
+                char* end = nullptr;
+                const long number = std::strtol(entry.path().filename().c_str(), &end, 10);
+                if (end && *end == '\0' && number >= 0)
+                    result.push_back({static_cast<int>(number), target});
+            }
         }
-        std::printf("%s: NVIDIA FDs=%d\n", stage, count);
-        return count;
+        return result;
     }
+
+    static int nvidiaFDs(const char* stage) {
+        const auto fds = findNvidiaFDs();
+        for (const auto& fd : fds)
+            std::printf("  NVIDIA FD %d -> %s\n", fd.number, fd.target.c_str());
+        std::printf("%s: NVIDIA FDs=%zu\n", stage, fds.size());
+        return static_cast<int>(fds.size());
+    }
+
+    static std::vector<std::string> nvidiaMappings() {
+        std::vector<std::string> result;
+        FILE* maps = std::fopen("/proc/self/maps", "r");
+        require(maps, "open /proc/self/maps");
+        char line[4096];
+        while (std::fgets(line, sizeof(line), maps)) {
+            if (std::strstr(line, "/nvidia-x11-") || std::strstr(line, "/libnvidia"))
+                result.emplace_back(line);
+        }
+        std::fclose(maps);
+        return result;
+    }
+
+    static bool releaseRetainedNvidiaAllocator() {
+        const auto mappings = nvidiaMappings();
+        std::set<std::string> allocator_paths;
+        for (const auto& mapping : mappings) {
+            const auto path_start = mapping.find('/');
+            const bool allocator = mapping.find("/libnvidia-allocator.so.") != std::string::npos;
+            if (!allocator || path_start == std::string::npos) {
+                std::fprintf(stderr, "REFUSING allocator release: unexpected NVIDIA mapping: %s",
+                             mapping.c_str());
+                return false;
+            }
+            std::string path = mapping.substr(path_start);
+            while (!path.empty() && (path.back() == '\n' || path.back() == '\r'))
+                path.pop_back();
+            allocator_paths.insert(path);
+        }
+        if (allocator_paths.size() != 1) {
+            std::fprintf(stderr, "REFUSING allocator release: expected exactly one allocator DSO, got %zu\n",
+                         allocator_paths.size());
+            return false;
+        }
+        const std::string& path = *allocator_paths.begin();
+        std::printf("releasing retained NVIDIA allocator reference: %s\n", path.c_str());
+        // LD_DEBUG=files proves this driver leaves one direct dlopen reference here.
+        // RTLD_NOLOAD obtains a balanced probe reference; the second dlclose releases
+        // the driver's retained reference and runs the allocator's own fini handler.
+        void* allocator = dlopen(path.c_str(), RTLD_NOW | RTLD_NOLOAD | RTLD_LOCAL);
+        if (!allocator) {
+            std::fprintf(stderr, "allocator RTLD_NOLOAD failed: %s\n", dlerror());
+            return false;
+        }
+        if (dlclose(allocator) != 0 || dlclose(allocator) != 0) {
+            std::fprintf(stderr, "allocator dlclose failed: %s\n", dlerror());
+            return false;
+        }
+        if (!nvidiaMappings().empty()) {
+            std::fprintf(stderr, "allocator remained mapped after its finalizer\n");
+            return false;
+        }
+        const auto fds = findNvidiaFDs();
+        std::printf("after NVIDIA allocator finalizer: NVIDIA FDs=%zu\n", fds.size());
+        std::printf("no NVIDIA code remains mapped; closing %zu orphaned NVIDIA FDs\n", fds.size());
+        for (const auto& fd : fds) {
+            if (::close(fd.number) != 0) {
+                std::fprintf(stderr, "close(%d -> %s) failed: %s\n", fd.number,
+                             fd.target.c_str(), std::strerror(errno));
+                return false;
+            }
+        }
+        return nvidiaFDs("after orphaned NVIDIA FD close") == 0;
+    }
+
+    static void reportNamespace(void* library) {
+        Lmid_t namespace_id = LM_ID_BASE;
+        link_map* map = nullptr;
+        require(dlinfo(library, RTLD_DI_LMID, &namespace_id) == 0, "dlinfo RTLD_DI_LMID");
+        require(dlinfo(library, RTLD_DI_LINKMAP, &map) == 0, "dlinfo RTLD_DI_LINKMAP");
+        std::printf("driver linker namespace=%ld\n", static_cast<long>(namespace_id));
+        for (link_map* item = map; item; item = item->l_next) {
+            if (item->l_name && (std::strstr(item->l_name, "nvidia") ||
+                                 std::strstr(item->l_name, "GLX")))
+                std::printf("  mapped dependency: %s\n", item->l_name);
+        }
+    }
+
+    enum class LinkMode { kDlopen, kDlmopen };
     struct Driver {
         void* library = nullptr;
         VkInstance instance = VK_NULL_HANDLE;
         VkDevice device = VK_NULL_HANDLE;
-        PFN_vkGetInstanceProcAddr gipa = nullptr;
-        PFN_vkDeviceWaitIdle idle = nullptr;
-        PFN_vkDestroyDevice destroyDevice = nullptr;
-        PFN_vkDestroyInstance destroyInstance = nullptr;
-        void open(uint32_t vendor, const char* path, PFN_vkGetInstanceProcAddr loaderGIPA) {
+        PFN_vkDeviceWaitIdle wait_idle = nullptr;
+        PFN_vkDestroyDevice destroy_device = nullptr;
+        PFN_vkDestroyInstance destroy_instance = nullptr;
+
+        void open(uint32_t expected_vendor, const char* path,
+                  PFN_vkGetInstanceProcAddr loader_gipa, LinkMode mode) {
             require(path, "no unique compatible canonical driver manifest");
-            library = dlopen(path, RTLD_NOW | RTLD_LOCAL);
-            if (!library) std::fprintf(stderr, "%s\n", dlerror());
-            require(library, "dlopen selected ICD");
-            auto driverGIPA = reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(library, "vk_icdGetInstanceProcAddr"));
-            require(driverGIPA, "ICD GIPA");
+            library = mode == LinkMode::kDlmopen
+                ? dlmopen(LM_ID_NEWLM, path, RTLD_NOW | RTLD_LOCAL)
+                : dlopen(path, RTLD_NOW | RTLD_LOCAL);
+            if (!library)
+                std::fprintf(stderr, "driver load error: %s\n", dlerror());
+            require(library, "load selected ICD");
+            reportNamespace(library);
+            nvidiaFDs("after ICD load, before Vulkan calls");
+
+            auto driver_gipa = reinterpret_cast<PFN_vkGetInstanceProcAddr>(
+                dlsym(library, "vk_icdGetInstanceProcAddr"));
+            require(driver_gipa, "ICD vk_icdGetInstanceProcAddr");
             using Negotiate = VkResult (*)(uint32_t*);
-            auto negotiate = reinterpret_cast<Negotiate>(dlsym(library, "vk_icdNegotiateLoaderICDInterfaceVersion"));
-            uint32_t interfaceVersion = 7;
-            require(negotiate && negotiate(&interfaceVersion) == VK_SUCCESS && interfaceVersion >= 7,
-                    "ICD interface version 7 required by ANGLE isolation");
-            auto enumerateExtensions = reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
-                driverGIPA(nullptr, "vkEnumerateInstanceExtensionProperties"));
-            uint32_t extensionCount = 0;
-            require(enumerateExtensions && enumerateExtensions(nullptr, &extensionCount, nullptr) == VK_SUCCESS,
-                    "selected ICD extension enumeration");
-            gipa = loaderGIPA;
-            VkDirectDriverLoadingInfoLUNARG direct{VK_STRUCTURE_TYPE_DIRECT_DRIVER_LOADING_INFO_LUNARG};
-            direct.pfnGetInstanceProcAddr = driverGIPA;
-            VkDirectDriverLoadingListLUNARG list{VK_STRUCTURE_TYPE_DIRECT_DRIVER_LOADING_LIST_LUNARG};
-            list.mode = VK_DIRECT_DRIVER_LOADING_MODE_EXCLUSIVE_LUNARG;
-            list.driverCount = 1; list.pDrivers = &direct;
+            auto negotiate = reinterpret_cast<Negotiate>(
+                dlsym(library, "vk_icdNegotiateLoaderICDInterfaceVersion"));
+            uint32_t version = 7;
+            require(negotiate && negotiate(&version) == VK_SUCCESS && version >= 7,
+                    "ICD interface version 7");
+            auto extensions = reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
+                driver_gipa(nullptr, "vkEnumerateInstanceExtensionProperties"));
+            uint32_t extension_count = 0;
+            require(extensions && extensions(nullptr, &extension_count, nullptr) == VK_SUCCESS,
+                    "ICD extension enumeration");
+            nvidiaFDs("after ICD negotiation/enumeration");
+
+            VkDirectDriverLoadingInfoLUNARG direct{};
+            direct.sType = VK_STRUCTURE_TYPE_DIRECT_DRIVER_LOADING_INFO_LUNARG;
+            direct.pfnGetInstanceProcAddr = driver_gipa;
+            VkDirectDriverLoadingListLUNARG direct_list{};
+            direct_list.sType = VK_STRUCTURE_TYPE_DIRECT_DRIVER_LOADING_LIST_LUNARG;
+            direct_list.mode = VK_DIRECT_DRIVER_LOADING_MODE_EXCLUSIVE_LUNARG;
+            direct_list.driverCount = 1;
+            direct_list.pDrivers = &direct;
             const char* extension = VK_LUNARG_DIRECT_DRIVER_LOADING_EXTENSION_NAME;
-            VkApplicationInfo app{VK_STRUCTURE_TYPE_APPLICATION_INFO}; app.apiVersion = VK_API_VERSION_1_1;
-            VkInstanceCreateInfo ci{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
-            ci.pNext = &list; ci.pApplicationInfo = &app; ci.enabledExtensionCount = 1; ci.ppEnabledExtensionNames = &extension;
-            auto create = reinterpret_cast<PFN_vkCreateInstance>(gipa(nullptr, "vkCreateInstance"));
-            VkResult result = create(&ci, nullptr, &instance);
-            std::printf("vendor=%04x exclusive instance result=%d\n", vendor, result);
-            require(result == VK_SUCCESS, "exclusive vkCreateInstance");
-            auto enumerate = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(gipa(instance, "vkEnumeratePhysicalDevices"));
-            auto properties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(gipa(instance, "vkGetPhysicalDeviceProperties"));
-            uint32_t count = 0; require(enumerate(instance, &count, nullptr) == VK_SUCCESS && count, "physical device count");
+            VkApplicationInfo app{};
+            app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+            app.apiVersion = VK_API_VERSION_1_1;
+            VkInstanceCreateInfo create_info{};
+            create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+            create_info.pNext = &direct_list;
+            create_info.pApplicationInfo = &app;
+            create_info.enabledExtensionCount = 1;
+            create_info.ppEnabledExtensionNames = &extension;
+            auto create_instance = reinterpret_cast<PFN_vkCreateInstance>(
+                loader_gipa(nullptr, "vkCreateInstance"));
+            require(create_instance(&create_info, nullptr, &instance) == VK_SUCCESS,
+                    "exclusive vkCreateInstance");
+            nvidiaFDs("after VkInstance creation");
+
+            auto enumerate = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
+                loader_gipa(instance, "vkEnumeratePhysicalDevices"));
+            auto properties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(
+                loader_gipa(instance, "vkGetPhysicalDeviceProperties"));
+            uint32_t count = 0;
+            require(enumerate(instance, &count, nullptr) == VK_SUCCESS && count,
+                    "physical device count");
             std::vector<VkPhysicalDevice> devices(count);
-            require(enumerate(instance, &count, devices.data()) == VK_SUCCESS, "enumerate devices");
-            VkPhysicalDevice physical = nullptr;
-            for (auto candidate : devices) {
-                VkPhysicalDeviceProperties p{}; properties(candidate, &p);
-                std::printf("  vendor=%04x device=%04x %s\n", p.vendorID, p.deviceID, p.deviceName);
-                require(p.vendorID == vendor, "exclusive instance exposed wrong vendor"); physical = candidate;
+            require(enumerate(instance, &count, devices.data()) == VK_SUCCESS,
+                    "physical device enumeration");
+            VkPhysicalDevice physical = VK_NULL_HANDLE;
+            for (VkPhysicalDevice candidate : devices) {
+                VkPhysicalDeviceProperties props{};
+                properties(candidate, &props);
+                std::printf("  vendor=%04x device=%04x %s\n",
+                            props.vendorID, props.deviceID, props.deviceName);
+                require(props.vendorID == expected_vendor,
+                        "exclusive instance exposed wrong vendor");
+                physical = candidate;
             }
-            auto queues = reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(gipa(instance, "vkGetPhysicalDeviceQueueFamilyProperties"));
-            queues(physical, &count, nullptr); std::vector<VkQueueFamilyProperties> families(count); queues(physical, &count, families.data());
-            uint32_t family = 0; while (family < count && !(families[family].queueFlags & VK_QUEUE_GRAPHICS_BIT)) ++family;
-            require(family < count, "graphics queue");
-            float priority = 1; VkDeviceQueueCreateInfo qi{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
-            qi.queueFamilyIndex = family; qi.queueCount = 1; qi.pQueuePriorities = &priority;
-            VkDeviceCreateInfo di{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO}; di.queueCreateInfoCount = 1; di.pQueueCreateInfos = &qi;
-            auto createDevice = reinterpret_cast<PFN_vkCreateDevice>(gipa(instance, "vkCreateDevice"));
-            require(createDevice(physical, &di, nullptr, &device) == VK_SUCCESS, "vkCreateDevice");
-            auto gdpa = reinterpret_cast<PFN_vkGetDeviceProcAddr>(gipa(instance, "vkGetDeviceProcAddr"));
-            idle = reinterpret_cast<PFN_vkDeviceWaitIdle>(gdpa(device, "vkDeviceWaitIdle"));
-            destroyDevice = reinterpret_cast<PFN_vkDestroyDevice>(gdpa(device, "vkDestroyDevice"));
-            destroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(gipa(instance, "vkDestroyInstance"));
+            auto queue_properties = reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(
+                loader_gipa(instance, "vkGetPhysicalDeviceQueueFamilyProperties"));
+            queue_properties(physical, &count, nullptr);
+            std::vector<VkQueueFamilyProperties> queues(count);
+            queue_properties(physical, &count, queues.data());
+            uint32_t family = 0;
+            while (family < count && !(queues[family].queueFlags & VK_QUEUE_GRAPHICS_BIT))
+                ++family;
+            require(family < count, "graphics queue family");
+            float priority = 1.0f;
+            VkDeviceQueueCreateInfo queue_info{};
+            queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queue_info.queueFamilyIndex = family;
+            queue_info.queueCount = 1;
+            queue_info.pQueuePriorities = &priority;
+            VkDeviceCreateInfo device_info{};
+            device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+            device_info.queueCreateInfoCount = 1;
+            device_info.pQueueCreateInfos = &queue_info;
+            auto create_device = reinterpret_cast<PFN_vkCreateDevice>(
+                loader_gipa(instance, "vkCreateDevice"));
+            require(create_device(physical, &device_info, nullptr, &device) == VK_SUCCESS,
+                    "vkCreateDevice");
+            auto gdpa = reinterpret_cast<PFN_vkGetDeviceProcAddr>(
+                loader_gipa(instance, "vkGetDeviceProcAddr"));
+            wait_idle = reinterpret_cast<PFN_vkDeviceWaitIdle>(gdpa(device, "vkDeviceWaitIdle"));
+            destroy_device = reinterpret_cast<PFN_vkDestroyDevice>(gdpa(device, "vkDestroyDevice"));
+            destroy_instance = reinterpret_cast<PFN_vkDestroyInstance>(
+                loader_gipa(instance, "vkDestroyInstance"));
+            require(wait_idle && destroy_device && destroy_instance, "destruction entry points");
+
+            // Exercise real device memory, command recording, queue submission, and cleanup.
+            auto get_memory_properties = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(
+                loader_gipa(instance, "vkGetPhysicalDeviceMemoryProperties"));
+            auto get_queue = reinterpret_cast<PFN_vkGetDeviceQueue>(gdpa(device, "vkGetDeviceQueue"));
+            auto create_buffer = reinterpret_cast<PFN_vkCreateBuffer>(gdpa(device, "vkCreateBuffer"));
+            auto destroy_buffer = reinterpret_cast<PFN_vkDestroyBuffer>(gdpa(device, "vkDestroyBuffer"));
+            auto get_buffer_requirements = reinterpret_cast<PFN_vkGetBufferMemoryRequirements>(
+                gdpa(device, "vkGetBufferMemoryRequirements"));
+            auto allocate_memory = reinterpret_cast<PFN_vkAllocateMemory>(gdpa(device, "vkAllocateMemory"));
+            auto free_memory = reinterpret_cast<PFN_vkFreeMemory>(gdpa(device, "vkFreeMemory"));
+            auto bind_buffer_memory = reinterpret_cast<PFN_vkBindBufferMemory>(gdpa(device, "vkBindBufferMemory"));
+            auto map_memory = reinterpret_cast<PFN_vkMapMemory>(gdpa(device, "vkMapMemory"));
+            auto unmap_memory = reinterpret_cast<PFN_vkUnmapMemory>(gdpa(device, "vkUnmapMemory"));
+            auto create_pool = reinterpret_cast<PFN_vkCreateCommandPool>(gdpa(device, "vkCreateCommandPool"));
+            auto destroy_pool = reinterpret_cast<PFN_vkDestroyCommandPool>(gdpa(device, "vkDestroyCommandPool"));
+            auto allocate_commands = reinterpret_cast<PFN_vkAllocateCommandBuffers>(
+                gdpa(device, "vkAllocateCommandBuffers"));
+            auto begin_command = reinterpret_cast<PFN_vkBeginCommandBuffer>(gdpa(device, "vkBeginCommandBuffer"));
+            auto end_command = reinterpret_cast<PFN_vkEndCommandBuffer>(gdpa(device, "vkEndCommandBuffer"));
+            auto fill_buffer = reinterpret_cast<PFN_vkCmdFillBuffer>(gdpa(device, "vkCmdFillBuffer"));
+            auto queue_submit = reinterpret_cast<PFN_vkQueueSubmit>(gdpa(device, "vkQueueSubmit"));
+            auto queue_wait_idle = reinterpret_cast<PFN_vkQueueWaitIdle>(gdpa(device, "vkQueueWaitIdle"));
+            require(get_memory_properties && get_queue && create_buffer && destroy_buffer &&
+                        get_buffer_requirements && allocate_memory && free_memory && bind_buffer_memory &&
+                        map_memory && unmap_memory && create_pool && destroy_pool && allocate_commands &&
+                        begin_command && end_command && fill_buffer && queue_submit && queue_wait_idle,
+                    "Vulkan workload entry points");
+
+            VkPhysicalDeviceMemoryProperties memory_properties{};
+            get_memory_properties(physical, &memory_properties);
+            VkBufferCreateInfo buffer_info{};
+            buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            buffer_info.size = 4096;
+            buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            VkBuffer buffer = VK_NULL_HANDLE;
+            require(create_buffer(device, &buffer_info, nullptr, &buffer) == VK_SUCCESS, "vkCreateBuffer");
+            VkMemoryRequirements requirements{};
+            get_buffer_requirements(device, buffer, &requirements);
+            uint32_t memory_type = memory_properties.memoryTypeCount;
+            for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i) {
+                if ((requirements.memoryTypeBits & (1u << i)) &&
+                    (memory_properties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
+                    memory_type = i;
+                    break;
+                }
+            }
+            require(memory_type < memory_properties.memoryTypeCount, "host-visible Vulkan memory type");
+            VkMemoryAllocateInfo allocation{};
+            allocation.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            allocation.allocationSize = requirements.size;
+            allocation.memoryTypeIndex = memory_type;
+            VkDeviceMemory memory = VK_NULL_HANDLE;
+            require(allocate_memory(device, &allocation, nullptr, &memory) == VK_SUCCESS, "vkAllocateMemory");
+            require(bind_buffer_memory(device, buffer, memory, 0) == VK_SUCCESS, "vkBindBufferMemory");
+            void* mapped = nullptr;
+            require(map_memory(device, memory, 0, requirements.size, 0, &mapped) == VK_SUCCESS && mapped,
+                    "vkMapMemory");
+            std::memset(mapped, 0x5a, static_cast<size_t>(requirements.size));
+            unmap_memory(device, memory);
+
+            VkQueue queue = VK_NULL_HANDLE;
+            get_queue(device, family, 0, &queue);
+            require(queue, "graphics queue");
+            VkCommandPoolCreateInfo pool_info{};
+            pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            pool_info.queueFamilyIndex = family;
+            VkCommandPool pool = VK_NULL_HANDLE;
+            require(create_pool(device, &pool_info, nullptr, &pool) == VK_SUCCESS, "vkCreateCommandPool");
+            VkCommandBufferAllocateInfo command_info{};
+            command_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            command_info.commandPool = pool;
+            command_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            command_info.commandBufferCount = 1;
+            VkCommandBuffer command = VK_NULL_HANDLE;
+            require(allocate_commands(device, &command_info, &command) == VK_SUCCESS, "vkAllocateCommandBuffers");
+            VkCommandBufferBeginInfo begin_info{};
+            begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            require(begin_command(command, &begin_info) == VK_SUCCESS, "vkBeginCommandBuffer");
+            fill_buffer(command, buffer, 0, buffer_info.size, 0x12345678u);
+            require(end_command(command) == VK_SUCCESS, "vkEndCommandBuffer");
+            VkSubmitInfo submit{};
+            submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit.commandBufferCount = 1;
+            submit.pCommandBuffers = &command;
+            require(queue_submit(queue, 1, &submit, VK_NULL_HANDLE) == VK_SUCCESS, "vkQueueSubmit");
+            require(queue_wait_idle(queue) == VK_SUCCESS, "vkQueueWaitIdle");
+            destroy_pool(device, pool, nullptr);
+            destroy_buffer(device, buffer, nullptr);
+            free_memory(device, memory, nullptr);
+            std::printf("Vulkan allocation and queue-submit workload completed\n");
+            nvidiaFDs("after VkDevice creation");
         }
-        void exercise() { for (int i = 0; i < 1000; ++i) require(idle(device) == VK_SUCCESS, "device wait idle"); }
-        void close() { if (device) { require(idle(device) == VK_SUCCESS, "final wait"); destroyDevice(device, nullptr); device = nullptr; }
-            if (instance) { destroyInstance(instance, nullptr); instance = nullptr; } if (library) { dlclose(library); library = nullptr; } }
+
+        void close() {
+            if (device) {
+                require(wait_idle(device) == VK_SUCCESS, "vkDeviceWaitIdle before destruction");
+                destroy_device(device, nullptr);
+                device = VK_NULL_HANDLE;
+                nvidiaFDs("after vkDestroyDevice");
+            }
+            if (instance) {
+                destroy_instance(instance, nullptr);
+                instance = VK_NULL_HANDLE;
+                nvidiaFDs("after vkDestroyInstance");
+            }
+            if (library) {
+                require(dlclose(library) == 0, "dlclose selected ICD");
+                library = nullptr;
+                nvidiaFDs("after dlclose selected ICD");
+            }
+        }
     };
+
     int main(int argc, char** argv) {
+        LinkMode mode = LinkMode::kDlopen;
+        bool with_intel = false;
+        bool close_loader = false;
+        bool release_allocator = false;
+        int delay_seconds = 0;
+        int cycles = 1;
+        bool metadata_only = false;
+        for (int i = 1; i < argc; ++i) {
+            if (std::strcmp(argv[i], "--mode=normal") == 0) mode = LinkMode::kDlopen;
+            else if (std::strcmp(argv[i], "--mode=namespace") == 0) mode = LinkMode::kDlmopen;
+            else if (std::strcmp(argv[i], "--with-intel") == 0) with_intel = true;
+            else if (std::strncmp(argv[i], "--delay=", 8) == 0) delay_seconds = std::atoi(argv[i] + 8);
+            else if (std::strcmp(argv[i], "--close-loader") == 0) close_loader = true;
+            else if (std::strcmp(argv[i], "--release-allocator") == 0) release_allocator = true;
+            else if (std::strncmp(argv[i], "--cycles=", 9) == 0) cycles = std::atoi(argv[i] + 9);
+            else if (std::strcmp(argv[i], "--metadata-only") == 0) metadata_only = true;
+            else fail("unknown argument");
+        }
         setenv("VK_LOADER_LAYERS_DISABLE", "~implicit~", 1);
-        for (const char* key : {"VK_DRIVER_FILES", "VK_ICD_FILENAMES", "VK_ADD_DRIVER_FILES", "VK_INSTANCE_LAYERS"}) unsetenv(key);
-        void* loader = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL); require(loader, "open private Vulkan loader");
+        for (const char* key : {"VK_DRIVER_FILES", "VK_ICD_FILENAMES", "VK_ADD_DRIVER_FILES", "VK_INSTANCE_LAYERS"})
+            unsetenv(key);
+        void* loader = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL);
+        require(loader, "open private Vulkan loader");
         using Resolver = const char* (*)(uint32_t);
         auto resolve = reinterpret_cast<Resolver>(dlsym(loader, "vkDualGpuDriverPathCHROMIUM_v1"));
         auto gipa = reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(loader, "vkGetInstanceProcAddr"));
         require(resolve && gipa, "private resolver ABI v1");
-        const char* intelPath = resolve(0x8086); const char* nvidiaPath = resolve(0x10de);
-        std::printf("Metadata: Intel=%s NVIDIA=%s\n", intelPath ? "found" : "missing", nvidiaPath ? "found" : "missing");
+        const char* intel_path = resolve(0x8086);
+        const char* nvidia_path = resolve(0x10de);
+        std::printf("Metadata: Intel=%s NVIDIA=%s\n", intel_path ? "found" : "missing",
+                    nvidia_path ? "found" : "missing");
         require(nvidiaFDs("metadata only") == 0, "metadata discovery opened NVIDIA");
-        if (argc > 1 && std::strcmp(argv[1], "--metadata-only") == 0) return intelPath && nvidiaPath ? 0 : 1;
-        Driver intel; intel.open(0x8086, intelPath, gipa);
-        require(nvidiaFDs("Intel only") == 0, "Intel instance opened NVIDIA");
-        for (int cycle = 0; cycle < 3; ++cycle) {
-            Driver nvidia; nvidia.open(0x10de, nvidiaPath, gipa);
-            std::thread a([&] { intel.exercise(); }), b([&] { nvidia.exercise(); }); a.join(); b.join();
-            nvidia.close(); require(nvidiaFDs("after NVIDIA teardown") == 0, "NVIDIA driver retained FDs after teardown");
-            intel.exercise();
+        if (metadata_only)
+            return intel_path && nvidia_path ? 0 : 1;
+        require(cycles >= 1, "cycles must be positive");
+        require(cycles == 1 || release_allocator,
+                "multiple cycles require --release-allocator to avoid intentional FD accumulation");
+
+        std::printf("EXPERIMENT mode=%s with_intel=%d close_loader=%d release_allocator=%d cycles=%d delay=%d\n",
+                    mode == LinkMode::kDlmopen ? "namespace" : "normal", with_intel,
+                    close_loader, release_allocator, cycles, delay_seconds);
+        Driver intel;
+        if (with_intel) {
+            intel.open(0x8086, intel_path, gipa, LinkMode::kDlopen);
+            require(nvidiaFDs("after Intel device") == 0, "Intel opened NVIDIA");
         }
-        intel.close(); puts("PASS: discovery, isolation, concurrent devices, three NVIDIA teardown/recreate cycles");
+        bool released = true;
+        for (int cycle = 1; cycle <= cycles; ++cycle) {
+            std::printf("NVIDIA cycle %d/%d\n", cycle, cycles);
+            Driver nvidia;
+            nvidia.open(0x10de, nvidia_path, gipa, mode);
+            nvidia.close();
+            const auto mappings = nvidiaMappings();
+            std::printf("after ICD dlclose: NVIDIA mappings=%zu\n", mappings.size());
+            for (const auto& mapping : mappings)
+                std::printf("  mapped: %s", mapping.c_str());
+            if (release_allocator)
+                released = releaseRetainedNvidiaAllocator() && released;
+        }
+        if (close_loader && !with_intel) {
+            require(dlclose(loader) == 0, "dlclose Vulkan loader");
+            loader = nullptr;
+            nvidiaFDs("after dlclose Vulkan loader");
+        }
+        if (delay_seconds > 0) {
+            std::printf("waiting %d seconds without any Vulkan calls\n", delay_seconds);
+            sleep(delay_seconds);
+        }
+        const int remaining = nvidiaFDs("FINAL");
+        if (with_intel)
+            intel.close();
+        if (loader)
+            dlclose(loader);
+        const bool success = released && remaining == 0;
+        std::printf("RESULT: %s\n", success ? "RELEASED" : "RETAINED");
+        return success ? 0 : 2;
     }
   '';
   preflight = pkgs.runCommandCC "chromium-dual-gpu-preflight-v6b" {
@@ -759,7 +955,6 @@ let
           std::mutex mutex;
           std::unordered_map<void*, std::shared_ptr<Dispatch>> records;
           std::atomic<uint64_t> generation{1};
-          std::once_flag initialize;
           PFN_vkGetInstanceProcAddr gipa = nullptr;
           std::shared_ptr<Dispatch> global;
           void* loader = nullptr;
@@ -860,7 +1055,8 @@ let
       code+=r''''
       void volkInitializeCustom(PFN_vkGetInstanceProcAddr handler) {
           auto& r = registry();
-          std::call_once(r.initialize, [&] {
+          std::lock_guard<std::mutex> lock(r.mutex);
+          if (!r.gipa) {
               if (!handler) fail("vkGetInstanceProcAddr");
               r.gipa = handler;
               // Keep the loader, not any ICD, alive for the immutable entry points.
@@ -869,8 +1065,9 @@ let
                   r.loader = dlopen(info.dli_fname, RTLD_NOW | RTLD_LOCAL);
               r.global = makeRecord(VK_NULL_HANDLE, VK_NULL_HANDLE, nullptr);
               std::fprintf(stderr, "DUALGPU: immutable Vulkan dispatch installed\n");
-          });
-          if (r.gipa != handler) fail("multiple Vulkan loaders in ANGLE");
+          } else if (r.gipa != handler) {
+              fail("multiple Vulkan loaders in ANGLE");
+          }
       }
       VkResult volkInitialize(void) {
           void* library = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL);
@@ -919,6 +1116,21 @@ let
       A='third_party/angle/'
       R=A+'src/libANGLE/renderer/vulkan/vk_renderer.cpp'
       H=A+'src/libANGLE/renderer/vulkan/vk_renderer.h'
+      prepend(H, '#include <set>\n')
+      prepend(R, ''''#if defined(ANGLE_PLATFORM_LINUX) && !defined(ANGLE_PLATFORM_ANDROID)
+      #include <dirent.h>
+      #include <dlfcn.h>
+      #include <limits.h>
+      #include <sys/stat.h>
+      #include <unistd.h>
+      #include <cerrno>
+      #include <cstdio>
+      #include <cstring>
+      #include <fstream>
+      #include <set>
+      #include <string>
+      #endif
+      '''')
       replace(A+'src/third_party/volk/BUILD.gn','"volk.c",','"dual_gpu_volk.cpp",')
       # Table alias resolution replaces all writes to global extension entry points.
       p=root/(A+'src/libANGLE/renderer/vulkan/vk_utils.cpp')
@@ -927,17 +1139,27 @@ let
           s=s[:m.start()]+f'void {m[1]}()\n{{\n    // Aliases are resolved independently in each immutable dispatch table.\n}}'+s[m.end():]
       p.write_text(s)
       replace_function(R,'void Renderer::reloadVolkIfNeeded() const','    // Every Vulkan handle dispatches through its own immutable table.')
+      replace(R, 'Renderer::~Renderer()', ''''#if defined(ANGLE_PLATFORM_LINUX) && !defined(ANGLE_PLATFORM_ANDROID)
+      static std::set<int> DualGpuNvidiaFdSnapshot();
+      static bool ReleaseDualGpuNvidiaDriver(const std::set<int>& baseline);
+      #endif
+      Renderer::~Renderer()'''')
       replace(H,'    void *mLibVulkanLibrary;',''''    void *mLibVulkanLibrary;
           // Resolved by the Vulkan loader from canonical runtime manifest metadata.
           void *mDualGpuDriverLibrary = nullptr;
           PFN_vkGetInstanceProcAddr mDualGpuDriverGIPA = nullptr;
-          PFN_vkEnumerateInstanceExtensionProperties mDualGpuEnumerateExtensions = nullptr;'''')
+          PFN_vkEnumerateInstanceExtensionProperties mDualGpuEnumerateExtensions = nullptr;
+          std::set<int> mDualGpuNvidiaFdBaseline;
+          bool mDualGpuNvidiaDriver = false;'''')
       replace(R,'    mGlobalOps = globalOps;',''''    mGlobalOps = globalOps;
       #if defined(ANGLE_PLATFORM_LINUX) && !defined(ANGLE_PLATFORM_ANDROID)
           const bool isolateDriver = desiredICD == angle::vk::ICD::Default &&
               angle::GetEnvironmentVar("CHROMIUM_DUAL_GPU_ISOLATION") != "0";
           if (isolateDriver)
           {
+              mDualGpuNvidiaDriver = preferredVendorId == 0x10de;
+              if (mDualGpuNvidiaDriver)
+                  mDualGpuNvidiaFdBaseline = DualGpuNvidiaFdSnapshot();
               using ResolveDriver = const char *(*)(uint32_t);
               auto resolveDriver = reinterpret_cast<ResolveDriver>(angle::GetLibrarySymbol(
                   mLibVulkanLibrary, "vkDualGpuDriverPathCHROMIUM_v1"));
@@ -1015,6 +1237,12 @@ let
               mDualGpuDriverLibrary = nullptr;
               mDualGpuDriverGIPA = nullptr;
               mDualGpuEnumerateExtensions = nullptr;
+              if (mDualGpuNvidiaDriver && !ReleaseDualGpuNvidiaDriver(mDualGpuNvidiaFdBaseline))
+                  ERR() << "DUALGPU: NVIDIA FD release refused or incomplete";
+              else if (mDualGpuNvidiaDriver)
+                  ERR() << "DUALGPU: NVIDIA ICD and session FDs released";
+              mDualGpuNvidiaDriver = false;
+              mDualGpuNvidiaFdBaseline.clear();
               ERR() << "DUALGPU: renderer and direct ICD reference released";
           }
 
@@ -1170,7 +1398,51 @@ let
         // If the user queries'''')
       print('Applied dispatch, driver-isolation, and safe idle-display teardown patches')
 
+      replace(R, 'angle::Result Renderer::initialize(vk::ErrorContext *context,', r''''#if defined(ANGLE_PLATFORM_LINUX) && !defined(ANGLE_PLATFORM_ANDROID)
+      static bool DualGpuNvidiaFd(const std::string& path) {
+        if (path.rfind("/dev/nvidia", 0) == 0) return true;
+        if (path.rfind("/dev/dri/", 0) != 0) return false;
+        std::ifstream vendor("/sys/class/drm/" + path.substr(path.rfind('/') + 1) + "/device/vendor");
+        std::string value;
+        return static_cast<bool>(vendor >> value) && std::strtoul(value.c_str(), nullptr, 0) == 0x10de;
+      }
+      static std::set<int> DualGpuNvidiaFdSnapshot() {
+        std::set<int> result;
+        DIR* directory = opendir("/proc/self/fd");
+        if (!directory) return result;
+        while (dirent* entry = readdir(directory)) {
+          char* end = nullptr; long fd = std::strtol(entry->d_name, &end, 10);
+          if (!end || *end || fd < 0) continue;
+          char path[PATH_MAX + 1] = {}; std::string link = "/proc/self/fd/" + std::string(entry->d_name);
+          ssize_t length = readlink(link.c_str(), path, PATH_MAX);
+          if (length >= 0) { path[length] = '\0'; if (DualGpuNvidiaFd(path)) result.insert(static_cast<int>(fd)); }
+        }
+        closedir(directory); return result;
+      }
+      static std::set<std::string> DualGpuNvidiaMappings() {
+        std::set<std::string> result; std::ifstream maps("/proc/self/maps"); std::string line;
+        while (std::getline(maps, line)) {
+          if (line.find("/nvidia-x11-") == std::string::npos && line.find("/libnvidia") == std::string::npos) continue;
+          size_t path = line.find('/'); if (path != std::string::npos) result.insert(line.substr(path));
+        }
+        return result;
+      }
+      static bool ReleaseDualGpuNvidiaDriver(const std::set<int>& baseline) {
+        auto mappings = DualGpuNvidiaMappings();
+        if (mappings.size() != 1 || mappings.begin()->find("/libnvidia-allocator.so.") == std::string::npos) return false;
+        void* allocator = dlopen(mappings.begin()->c_str(), RTLD_NOW | RTLD_NOLOAD | RTLD_LOCAL);
+        if (!allocator || dlclose(allocator) != 0 || dlclose(allocator) != 0 || !DualGpuNvidiaMappings().empty()) return false;
+        for (int fd : DualGpuNvidiaFdSnapshot()) if (!baseline.contains(fd) && close(fd) != 0) return false;
+        return DualGpuNvidiaFdSnapshot() == baseline;
+      }
+      #endif
+      angle::Result Renderer::initialize(vk::ErrorContext *context,'''')
+
       replace(A+'src/common/vulkan/libvulkan_loader.cpp', '#if defined(ANGLE_USE_CUSTOM_LIBVULKAN)', '#if defined(ANGLE_USE_CUSTOM_LIBVULKAN) && !defined(ANGLE_PLATFORM_LINUX)')
+      replace(R, 'angle::Result Renderer::initialize(vk::ErrorContext *context,', ''''#if defined(__clang__)
+      __attribute__((no_sanitize("cfi-icall")))
+      #endif
+      angle::Result Renderer::initialize(vk::ErrorContext *context,'''')
       replace('ui/gl/gl_context_egl.cc', '  OnContextWillDestroy();\n  if (context_) {', ''''  OnContextWillDestroy();
       #if BUILDFLAG(IS_LINUX)
         if (context_ && (gl_display_->system_device_id() >> 32) == 0x10de &&
@@ -1186,7 +1458,7 @@ let
       #if BUILDFLAG(IS_LINUX)
           if (gpu_preference == gl::GpuPreference::kHighPerformance &&
               GetANGLEImplementation() == ANGLEImplementation::kVulkan &&
-              features::SupportsEGLDualGPURendering()) {
+              SupportsEGLDualGPURendering()) {
             // Retain the preference mapping for a later retry (e.g. DTX reattach).
             // Do not silently satisfy an explicit high-power request with Intel.
             LOG(ERROR) << "DUALGPU: high-performance display initialization failed; mapping retained";
@@ -1199,7 +1471,7 @@ let
       #if BUILDFLAG(IS_LINUX)
           if (gpu_preference == gl::GpuPreference::kHighPerformance && display &&
               GetANGLEImplementation() == ANGLEImplementation::kVulkan &&
-              features::SupportsEGLDualGPURendering()) {
+              SupportsEGLDualGPURendering()) {
             display->Shutdown();
             return nullptr;
           }
@@ -1243,6 +1515,14 @@ let
       replace('void LoadVulkanLibraries() {',r''''// Use the runtime linker's effective search paths. Reading this metadata and
       // resolving file symlinks does not load or initialize the NVIDIA ICD. Permit
       // lazy driver/dependency opens through the existing read-only file broker.
+      #if defined(__clang__)
+      __attribute__((no_sanitize("cfi-icall")))
+      #endif
+      const char* CallDualGpuDriverResolver(void* symbol, uint32_t vendor) {
+        using ResolveDriver = const char* (*)(uint32_t);
+        return reinterpret_cast<ResolveDriver>(symbol)(vendor);
+      }
+
       void AddDualGpuDriverLibraryPermissions(std::vector<BrokerFilePermission>* permissions) {
         std::set<std::string> directories;
         dl_iterate_phdr([](dl_phdr_info* info, size_t, void* opaque) {
@@ -1270,12 +1550,10 @@ let
           return 0;
         }, &directories);
         void* loader = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL);
-        using ResolveDriver = const char* (*)(uint32_t);
-        auto resolve = loader ? reinterpret_cast<ResolveDriver>(
-            dlsym(loader, "vkDualGpuDriverPathCHROMIUM_v1")) : nullptr;
+        void* resolve = loader ? dlsym(loader, "vkDualGpuDriverPathCHROMIUM_v1") : nullptr;
         if (resolve) {
           for (uint32_t vendor : {0x8086u, 0x10deu}) {
-            if (const char* path = resolve(vendor)) {
+            if (const char* path = CallDualGpuDriverResolver(resolve, vendor)) {
               directories.insert(base::FilePath(path).DirName().value());
               LOG(ERROR) << "DUALGPU: metadata-only driver discovery vendor=" << vendor;
             }
