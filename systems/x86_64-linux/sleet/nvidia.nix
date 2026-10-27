@@ -16,10 +16,17 @@
       KERNELS=="0000:00:02.0", \
       DRIVERS=="i915", \
       SYMLINK+="dri/intel-igpu"
+
+    SUBSYSTEM=="drm", \
+      KERNEL=="renderD[0-9]*", \
+      SUBSYSTEMS=="pci", \
+      KERNELS=="0000:00:02.0", \
+      DRIVERS=="i915", \
+      SYMLINK+="dri/intel-render"
   '';
   environment.sessionVariables = {
     KWIN_DRM_DEVICES = "/dev/dri/intel-igpu";
-    KWIN_RENDER_NODES = "";
+    KWIN_RENDER_NODES = "/dev/dri/intel-render";
     KWIN_DISABLE_VULKAN = "1";
   };
 
