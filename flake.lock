@@ -335,6 +335,18 @@
         "type": "github"
       }
     },
+    "moonfin-release": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-8dQ0rZCkSRUGQHJn7PYb90gvHYGBGC3ba3CaXCvLvaw=",
+        "type": "file",
+        "url": "https://api.github.com/repos/Moonfin-Client/Moonfin-Core/releases/latest"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://api.github.com/repos/Moonfin-Client/Moonfin-Core/releases/latest"
+      }
+    },
     "nanofab-cli": {
       "inputs": {
         "brad-utils": "brad-utils_2",
@@ -469,6 +481,7 @@
         "impermanence": "impermanence",
         "kairpods": "kairpods",
         "lanzaboote": "lanzaboote",
+        "moonfin-release": "moonfin-release",
         "nanofab-cli": "nanofab-cli",
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",

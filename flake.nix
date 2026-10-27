@@ -51,6 +51,11 @@
       url = "github:alacritty/alacritty-theme";
       flake = false;
     };
+    moonfin-release = {
+      type = "file";
+      url = "https://api.github.com/repos/Moonfin-Client/Moonfin-Core/releases/latest";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.snowfall-lib.mkFlake {
