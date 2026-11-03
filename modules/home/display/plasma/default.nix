@@ -52,6 +52,10 @@ in
             "LidAction" = 64;
           };
         };
+        "baloofilerc"."Basic Settings"."Indexing-Enabled" = {
+          value = false;
+          immutable = true;
+        };
       };
     };
 
