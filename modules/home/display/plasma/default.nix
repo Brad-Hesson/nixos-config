@@ -65,6 +65,14 @@ in
         ".local/share/kscreen"
         ".local/share/baloo"
         ".local/share/dolphin"
+        # akonadi (pulled in by programs.kde-pim): db + agent registry must persist together
+        ".local/share/akonadi"
+        ".local/share/akonadi_migration_agent"
+        ".config/akonadi"
+        # data dirs for the default akonadi resources
+        ".local/share/contacts"
+        ".local/share/local-mail"
+        ".local/share/apps/korganizer"
       ];
       files = [
         {
@@ -88,6 +96,26 @@ in
           method = "symlink";
         }
         ".local/share/user-places.xbel"
+        {
+          file = ".config/akonadi-firstrunrc";
+          method = "symlink";
+        }
+        {
+          file = ".config/akonadi_contacts_resource_0rc";
+          method = "symlink";
+        }
+        {
+          file = ".config/akonadi_ical_resource_0rc";
+          method = "symlink";
+        }
+        {
+          file = ".config/akonadi_maildir_resource_0rc";
+          method = "symlink";
+        }
+        {
+          file = ".config/akonadi_indexing_agentrc";
+          method = "symlink";
+        }
       ];
     };
   };
